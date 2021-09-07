@@ -39,10 +39,10 @@ def stockPrice(symbol):
     soup = BeautifulSoup(r.text, 'html.parser')
 
     # returns the price
-    price = soup.find('div', {'class':'Fz(12px) C($tertiaryColor) My(0px) D(ib) Va(b)'}).find_all('span')[0].text
+    price = soup.find('div', {'class':'D(ib) Mend(20px)'}).find_all('span')[0].text
 
     # returns the change in price
-    change = soup.find('div', {'class':'Fz(12px) C($tertiaryColor) My(0px) D(ib) Va(b)'}).find_all('span')[1].text
+    change = soup.find('div', {'class':'D(ib) Mend(20px)'}).find_all('span')[1].text
     
     cursor.execute('''
                 INSERT INTO StockMarket (Symbol, Price, Change, Date)
