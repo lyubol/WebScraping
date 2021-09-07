@@ -38,10 +38,10 @@ def stockPrice(symbol):
     # soup variable containing text of the url request
     soup = BeautifulSoup(r.text, 'html.parser')
 
-    # returns the price of BTC
+    # returns the price
     price = soup.find('div', {'class':'Fz(12px) C($tertiaryColor) My(0px) D(ib) Va(b)'}).find_all('span')[0].text
 
-    # returns the change in price of BTC
+    # returns the change in price
     change = soup.find('div', {'class':'Fz(12px) C($tertiaryColor) My(0px) D(ib) Va(b)'}).find_all('span')[1].text
     
     cursor.execute('''
