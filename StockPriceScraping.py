@@ -71,6 +71,6 @@ while int(time_now.hour) >= int(opening_time.hour) and int(time_now.hour) <= int
         and week_day >= 0 and week_day <= 5:
     for each in favourite_stocks:
         stockPrice(each)
-    time.sleep(60)
+    time.sleep(600)
 
     
