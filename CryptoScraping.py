@@ -101,6 +101,6 @@ def transform(soup):
     return crypto_table
 
 
-transform(content)
+display(transform(content))
 
 
