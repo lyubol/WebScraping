@@ -17,8 +17,8 @@ import time
 
 # setup database connection
 conn = pyodbc.connect('Driver={SQL Server};'
-                     'Server=ADATIS-LAP-BG06;'
-                      'Database=Library;'
+                     'Server=server_name;'
+                      'Database=database_name;'
                       'Trusted_Connection=yes;'
                      )
 
