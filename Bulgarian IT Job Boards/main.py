@@ -28,7 +28,6 @@ class scrape_devbg:
                 salary = salary.split("лв.")[0]
             except:
                 salary = "Unknown"
-
             job = {
                 "title": title,
                 "company": company,
