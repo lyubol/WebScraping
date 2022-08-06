@@ -105,62 +105,64 @@ df_posts.write.saveAsTable("jobposts.stage_posts")
 # COMMAND ----------
 
 # DBTITLE 1,Update Posts Delta table
-# MAGIC %sql
-# MAGIC 
-# MAGIC MERGE INTO jobposts.posts AS posts
-# MAGIC USING jobposts.stage_posts AS stage_posts
-# MAGIC ON posts.Id = stage_posts.Id
-# MAGIC WHEN MATCHED THEN
-# MAGIC   UPDATE SET 
-# MAGIC     Id = stage_posts.Id,
-# MAGIC     IngestionDate = stage_posts.IngestionDate,
-# MAGIC     Source = stage_posts.Source,
-# MAGIC     Title = stage_posts.Title,
-# MAGIC     Company = stage_posts.Company,
-# MAGIC     Location = stage_posts.Location,
-# MAGIC     Uploaded = stage_posts.Uploaded,
-# MAGIC     Salary = stage_posts.Salary,
-# MAGIC     Department = stage_posts.Department,
-# MAGIC     Link = stage_posts.Link
-# MAGIC WHEN NOT MATCHED THEN 
-# MAGIC   INSERT(
-# MAGIC     Id, 
-# MAGIC     IngestionDate, 
-# MAGIC     Source, 
-# MAGIC     Title, 
-# MAGIC     Company,
-# MAGIC     Location,
-# MAGIC     Uploaded,
-# MAGIC     Salary,
-# MAGIC     Department,
-# MAGIC     Link,
-# MAGIC     IsActive
-# MAGIC   ) 
-# MAGIC   VALUES(
-# MAGIC     stage_posts.Id,
-# MAGIC     stage_posts.IngestionDate,
-# MAGIC     stage_posts.Source,
-# MAGIC     stage_posts.Title,
-# MAGIC     stage_posts.Company,
-# MAGIC     stage_posts.Location,
-# MAGIC     stage_posts.Uploaded,
-# MAGIC     stage_posts.Salary,
-# MAGIC     stage_posts.Department,
-# MAGIC     stage_posts.Link,
-# MAGIC     1
-# MAGIC   );
+spark.sql("""
+    MERGE INTO jobposts.posts AS posts
+    USING jobposts.stage_posts AS stage_posts
+    ON posts.Id = stage_posts.Id
+    WHEN MATCHED THEN
+      UPDATE SET 
+        Id = stage_posts.Id,
+        IngestionDate = stage_posts.IngestionDate,
+        Source = stage_posts.Source,
+        Title = stage_posts.Title,
+        Company = stage_posts.Company,
+        Location = stage_posts.Location,
+        Uploaded = stage_posts.Uploaded,
+        Salary = stage_posts.Salary,
+        Department = stage_posts.Department,
+        Link = stage_posts.Link
+    WHEN NOT MATCHED THEN 
+      INSERT(
+        Id, 
+        IngestionDate, 
+        Source, 
+        Title, 
+        Company,
+        Location,
+        Uploaded,
+        Salary,
+        Department,
+        Link,
+        IsActive
+      ) 
+      VALUES(
+        stage_posts.Id,
+        stage_posts.IngestionDate,
+        stage_posts.Source,
+        stage_posts.Title,
+        stage_posts.Company,
+        stage_posts.Location,
+        stage_posts.Uploaded,
+        stage_posts.Salary,
+        stage_posts.Department,
+        stage_posts.Link,
+        1
+      );
+""")
 
 # COMMAND ----------
 
-# MAGIC %sql 
-# MAGIC 
-# MAGIC UPDATE jobposts.posts
-# MAGIC SET IsActive = 0
-# MAGIC WHERE Id IN (
-# MAGIC   SELECT Id FROM jobposts.posts
-# MAGIC   EXCEPT
-# MAGIC   SELECT Id FROM jobposts.stage_posts
-# MAGIC   )
+spark.sql("""
+    UPDATE jobposts.posts
+    SET IsActive = 0
+    WHERE Id IN (
+      SELECT Id FROM jobposts.posts
+      EXCEPT
+      SELECT Id FROM jobposts.stage_posts
+      );
+""")
+
+
 
 # COMMAND ----------
 
