@@ -9,8 +9,8 @@ USE jobposts;
 -- DBTITLE 1,-- Create table `posts` only if table with same name doesn't exist.
 CREATE TABLE IF NOT EXISTS jobposts.posts(
   	Id STRING,
-    IngestionDate DATE,
-    Source STRING,
+  	IngestionDate DATE,
+  	Source STRING,
 	Title STRING,
 	Company STRING,
 	Location STRING,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS jobposts.posts(
 	Salary STRING,
 	Department STRING,
 	Link STRING,
-    IsActive BOOLEAN
+    	IsActive BOOLEAN
 )
 
 -- COMMAND ----------
