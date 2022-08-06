@@ -1,6 +1,7 @@
 # Databricks notebook source
 from datetime import date
 import time
+import pandas as pd
 
 # COMMAND ----------
 
@@ -33,7 +34,7 @@ descriptions_file_name = f"descriptions-{date.today()}.csv"
 
 # COMMAND ----------
 
-# DBTITLE 1,Scrape posts and write to ADLS
+# DBTITLE 1,Scrape job posts
 # Create list to hold posts data. Each post will be appended as a dictionary
 job_posts = []
 
@@ -50,6 +51,7 @@ df_posts = pd.DataFrame.from_dict(job_posts)
 
 # COMMAND ----------
 
+# DBTITLE 1,Write to ADLS (Raw)
 # Create target location
 dbutils.fs.mkdirs(main_path + posts_path)
 
@@ -58,7 +60,7 @@ df_posts.to_csv(location_prefix + main_path + posts_path + posts_file_name)
 
 # COMMAND ----------
 
-# DBTITLE 1,Scrape descriptions and write to ADLS
+# DBTITLE 1,Scrape job descriptions
 # # Create list to hold descriptions data. Each description will be appended as a dictionary
 # job_description = []
 # links = df_posts["link"].to_list()
@@ -72,6 +74,7 @@ df_posts.to_csv(location_prefix + main_path + posts_path + posts_file_name)
 
 # COMMAND ----------
 
+# DBTITLE 1,Write to ADLS
 # # Create target location
 # dbutils.fs.mkdirs(main_path + descriptions_path)
 
@@ -80,4 +83,8 @@ df_posts.to_csv(location_prefix + main_path + posts_path + posts_file_name)
 
 # COMMAND ----------
 
+# MAGIC %run "lirkov/IT Job Boards/Tests Source to Raw"
 
+# COMMAND ----------
+
+# MAGIC %run "lirkov/IT Job Boards/Raw to Base to Delta"
