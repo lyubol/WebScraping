@@ -37,22 +37,3 @@ dbutils.fs.mkdirs(main_path + posts_path)
 # Write the Posts DataFrame to ADLS, raw location
 df_posts.to_csv(location_prefix + main_path + posts_path + posts_file_name)
 
-# COMMAND ----------
-
-df_posts["description"] = df_posts["description"].str.replace(r'<[^<>]*>', '', regex=True)
-
-# COMMAND ----------
-
-for i in df_posts["description"]:
-    print(i)
-    print("------------------------------------------NEXT------------------------------------------")
-
-# COMMAND ----------
-
-for i in df_posts["company"]:
-    print(i)
-    print("------------------------------------------NEXT------------------------------------------")
-
-# COMMAND ----------
-
-
