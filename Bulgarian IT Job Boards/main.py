@@ -4,6 +4,11 @@ from bs4 import BeautifulSoup
 
 # COMMAND ----------
 
+#===========================================================================================================
+#----------------------------- Bulgarian IT Job Boards - Web Scraping Project ------------------------------
+#===========================================================================================================
+
+# Class to scrape "https://dev.bg/"
 class scrape_devbg:
     
     def __init__(self, department):
@@ -17,7 +22,7 @@ class scrape_devbg:
         soup = BeautifulSoup(r.content, "html.parser")
         return soup
     
-    
+    # Scrape job description by passing a job posts link. Links are obtained by the scrapeJobPost method.
     def scrapeJobDescription(self, soup, link, target_list):
         divs = soup.find_all("div", class_ =  "single_job_listing")
         for tag in divs:
@@ -32,7 +37,8 @@ class scrape_devbg:
             target_list.append(job_description)
         return 
                 
-
+    # Scrape job posts by looking at the main page. 
+    # Link to the detailed job description page is also scraped and can be passed to the scrapeJobDescription method.
     def scrapeJobPost(self, soup, target_list):
         divs = soup.find_all("div", class_ = "job-list-item")
         for tag in divs:
@@ -70,15 +76,28 @@ class scrape_devbg:
             target_list.append(job)
         return 
 
-
+    # Returns the results per page
     def getPageResults(self, page):
         soup = self.parseHtml(page)
         divs = soup.find_all("div", class_ =  "job-list-item")
         return len(divs)
 
-
+    # Returns the total count of pages, based on results per page != 0
     def getPageCount(self):
         page = 1
         while self.getPageResults(page) != 0:
             page += 1
         return page - 1
+      
+        
+# Class to scrape "https://noblehire.io/"        
+class scrape_Noblehire():
+    url = "https://prod-noblehire-api-000001.appspot.com/job?"
+    
+    # Returns all posts for a given page as Pandas DataFrame
+    def getPosts(self, page):
+        page = f"&page={page}"
+        url = scrape_Noblehire.url + page
+        response = requests.request("GET", url)
+        df_response = pd.DataFrame.from_dict(response.json()["elements"])
+        return df_response

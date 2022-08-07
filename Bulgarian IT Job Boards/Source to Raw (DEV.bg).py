@@ -24,13 +24,13 @@ devbg_departments = [
     "technical-support"
 ]
 
-# Target location paths
+# Raw location variables
 location_prefix = "/dbfs"
 main_path = "/mnt/adlslirkov/it-job-boards/DEV.bg/raw/"
 posts_path = f"posts/{date.today().year}/{date.today().month}/{date.today().day}/"
-posts_file_name = f"posts-{date.today()}.csv"
+posts_file_name = f"devbg-posts-{date.today()}.csv"
 descriptions_path = f"descriptions/{date.today().year}/{date.today().month}/{date.today().day}/"
-descriptions_file_name = f"descriptions-{date.today()}.csv"
+descriptions_file_name = f"devbg-descriptions-{date.today()}.csv"
 
 # COMMAND ----------
 
@@ -40,11 +40,11 @@ job_posts = []
 
 # Execute scrapeJobPosts for all departments and all pages
 for department in devbg_departments:
-    test = scrape_devbg(department)
+    posts = scrape_devbg(department)
     time.sleep(10)
-    for page in range(1, test.getPageCount() + 1):
+    for page in range(1, posts.getPageCount() + 1):
         time.sleep(1)
-        test.scrapeJobPost(test.parseHtml(page=page), job_posts)
+        posts.scrapeJobPost(posts.parseHtml(page=page), job_posts)
         
 # Create Posts DataFrame        
 df_posts = pd.DataFrame.from_dict(job_posts)
