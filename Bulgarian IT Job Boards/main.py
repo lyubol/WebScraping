@@ -99,5 +99,4 @@ class scrape_Noblehire():
         page = f"&page={page}"
         url = scrape_Noblehire.url + page
         response = requests.request("GET", url)
-        df_response = pd.DataFrame.from_dict(response.json()["elements"])
-        return df_response
+        return response.json()["elements"]
