@@ -41,9 +41,9 @@ dbutils.fs.mkdirs(main_path + posts_path)
 print(f"Created: {main_path + posts_path}")
 
 # Since the raw data has more than 700 columns and above 300 of them are useless (e.g. icons and images ids), 
-# some of them will be droped in order to decrease the raw file size.
+# some of the will be droped in order to decrease the raw file size.
 df_posts = pd.DataFrame.from_dict(flatten_posts_list)
-columns_to_drop = [c for c in df_posts.columns if "icon" in c or "images" in c]
+columns_to_drop = [c for c in df_posts.columns if "icon" in c.lower() or "images" in c.lower() or "image" in c.lower()]
 df_posts = df_posts.drop(columns=columns_to_drop)
 
 # Write the Posts DataFrame to ADLS, raw location
