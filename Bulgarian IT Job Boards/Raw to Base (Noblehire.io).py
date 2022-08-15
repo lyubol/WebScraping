@@ -1,4 +1,33 @@
 # Databricks notebook source
+# DBTITLE 1,Notebook Description
+# MAGIC %md
+# MAGIC The following notebook:
+# MAGIC   1. Reads the Noblehire.io Raw data;
+# MAGIC      - It contains about four hundred columns, some of which contains nested json objects. Also, it covers different topics;
+# MAGIC   2. Cleans and transforms the data;
+# MAGIC      - The nested columns are being unpacked and the total columns number goes above one hundred thousand;
+# MAGIC   3. Creates thirteen separate DataFrames out of the Raw dataset.
+# MAGIC      - Because of the huge amount of columns and due to the data covering different topics, it is splited. 
+# MAGIC      
+# MAGIC The output of this notebook are the following DataFrames (also saved as .csv files in ADLS)
+# MAGIC   - Company Locations Address;
+# MAGIC   - Company Locations;
+# MAGIC   - Company General;
+# MAGIC   - Company Awards;
+# MAGIC   - Company Perks;
+# MAGIC   - Company Values;
+# MAGIC   - Job Requirements;
+# MAGIC   - Job Benefits;
+# MAGIC   - Job Responsibilities;
+# MAGIC   - Job Tools;
+# MAGIC   - Job Activities;
+# MAGIC   - Job Hiring Process;
+# MAGIC   - Posts General.
+# MAGIC   
+# MAGIC All datasets can be joined together via the post_id or company_id columns.
+
+# COMMAND ----------
+
 # DBTITLE 1,Imports
 from datetime import date
 import time
@@ -80,6 +109,11 @@ df_posts = df_posts.drop(columns=["Unnamed: 0"]).drop_duplicates()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC # Create Company DataFrames and write them to ADLS
+
+# COMMAND ----------
+
 # DBTITLE 1,Company Locations Address
 # Create ADLS location
 dbutils.fs.mkdirs(main_path + company_locations_address_path)
@@ -96,9 +130,9 @@ for column in company_location_address_cols:
     # Flatten each company_location_address column and return it as a DataFrame
     df_temp = transformCompanyLocationColumns(df_posts, column)
     # Bring any other related columns from the main DataFrame to the company location address DataFrame
-    df_temp = df_temp.merge(df_posts[["id", column.replace("address", "teamSize"), column.replace("address", "founded"), column.replace("address", "comment")]], left_on=df_temp.index, right_on="id")
+    df_temp = df_temp.merge(df_posts[["id", "company_id", column.replace("address", "teamSize"), column.replace("address", "founded"), column.replace("address", "comment")]], left_on=df_temp.index, right_on="id")
     # Drop columnsm, which contains only NaN values
-    df_temp = df_temp.dropna(axis=0, how="all", subset=[column for column in df_temp.columns if column != "id"])
+    df_temp = df_temp.dropna(axis=0, how="all", subset=[column for column in df_temp.columns if column != "id" and column != "company_id"])
     # Save to companyLocationAddress folder in ADLS
     # Set file name 
     save_to_file_name = f"noblehireio-{column}-{date.today()}.csv"
@@ -111,7 +145,7 @@ for column in company_location_address_cols:
 
 # COMMAND ----------
 
-# DBTITLE 1,Locations
+# DBTITLE 1,Company Locations
 # Create ADLS location
 dbutils.fs.mkdirs(main_path + company_locations_path)
 
@@ -127,9 +161,9 @@ for column in company_locations_cols:
     # Flatten each company_location_address column and return it as a DataFrame
     df_temp = transformCompanyLocationColumns(df_posts, column)
     # Bring any other related columns from the main DataFrame to the company location address DataFrame
-    df_temp = df_temp.merge(df_posts[["id", column.replace("address", "teamSize"), column.replace("address", "founded"), column.replace("address", "comment")]], left_on=df_temp.index, right_on="id")
+    df_temp = df_temp.merge(df_posts[["id", "company_id", column.replace("address", "teamSize"), column.replace("address", "founded"), column.replace("address", "comment")]], left_on=df_temp.index, right_on="id")
     # Drop columnsm, which contains only NaN values
-    df_temp = df_temp.dropna(axis=0, how="all", subset=[column for column in df_temp.columns if column != "id"])
+    df_temp = df_temp.dropna(axis=0, how="all", subset=[column for column in df_temp.columns if column != "id" and column != "company_id"])
     # Save to companyLocationAddress folder in ADLS
     # Set file name 
     save_to_file_name = f"noblehireio-{column}-{date.today()}.csv"
@@ -162,6 +196,7 @@ df_company_general["company_product"] = df_company_general["company_product"].re
 df_company_general["description"] = df_company_general["description"].replace(r'<[^<>]*>', "", regex=True)
 df_company_general["description"] = df_company_general["description"].str.replace("&nbsp;", "").str.replace("amp", "")
 df_company_general["productDescription"] = df_company_general["productDescription"].replace(r'<[^<>]*>', "", regex=True)
+df_company_general["productDescription"] = df_company_general["productDescription"].str.replace("&nbsp;", "").str.replace("amp", "")
 
 # Create ADLS location
 dbutils.fs.mkdirs(main_path + company_general_path)
@@ -278,9 +313,19 @@ df_company_values.to_csv(f"{location_prefix}{main_path}{company_values_path}nobl
 
 # COMMAND ----------
 
-# DBTITLE 1,Job requirements
+# MAGIC %md
+# MAGIC # Create Job DataFrames and write them to ADLS
+
+# COMMAND ----------
+
+# Rename id to postId
+df_posts = df_posts.rename(columns={"id":"post_id"})
+
+# COMMAND ----------
+
+# DBTITLE 1,Job Requirements
 df_job_requirements = (df_posts[[
-    "company_id",
+    "post_id",
     "requirements_0_title",
     "requirements_1_title",
     "requirements_2_title",
@@ -309,9 +354,9 @@ df_job_requirements.to_csv(f"{location_prefix}{main_path}{job_requirements_path}
 
 # COMMAND ----------
 
-# DBTITLE 1,Job benefits
+# DBTITLE 1,Job Benefits
 df_job_benefits = (df_posts[[
-    "company_id",
+    "post_id",
     "benefits_0_title",
     "benefits_1_title",
     "benefits_2_title",
@@ -353,9 +398,9 @@ df_job_benefits.to_csv(f"{location_prefix}{main_path}{job_benefits_path}noblehir
 
 # COMMAND ----------
 
-# DBTITLE 1,Job responsibilities
+# DBTITLE 1,Job Responsibilities
 df_job_responsibilities = (df_posts[[
-    "company_id",
+    "post_id",
     "responsibilities_0_title",
     "responsibilities_1_title",
     "responsibilities_2_title",
@@ -387,9 +432,9 @@ df_job_responsibilities.to_csv(f"{location_prefix}{main_path}{job_responsibiliti
 
 # COMMAND ----------
 
-# DBTITLE 1,Job tools
+# DBTITLE 1,Job Tools
 df_job_tools = (df_posts[[
-    "company_id",
+    "post_id",
     "tools_0",
     "tools_1",
     "tools_2",
@@ -420,9 +465,9 @@ df_job_tools.to_csv(f"{location_prefix}{main_path}{job_tools_path}noblehireio-jo
 
 # COMMAND ----------
 
-# DBTITLE 1,Job activities
+# DBTITLE 1,Job Activities
 df_job_activities = (df_posts[[
-    "company_id",
+    "post_id",
     "activities_0_timePercents",
     "activities_0_title",
     "activities_1_timePercents",
@@ -447,9 +492,9 @@ df_job_activities.to_csv(f"{location_prefix}{main_path}{job_activities_path}nobl
 
 # COMMAND ----------
 
-# DBTITLE 1,Job hiring process
+# DBTITLE 1,Job Hiring Process
 df_job_hiring_process = (df_posts[[
-    "company_id",
+    "post_id",
     "hiringProcessSteps_0",
     "hiringProcessSteps_1",
     "hiringProcessSteps_2",
@@ -466,11 +511,12 @@ df_job_activities.to_csv(f"{location_prefix}{main_path}{job_activities_path}nobl
 
 # COMMAND ----------
 
-existing_columns = company_general_columns + company_awards_columns + company_perks_columns + company_values_columns + job_requirements + job_benefits + job_responsibilities + job_tools + job_activities + job_hiring_process
+# MAGIC %md
+# MAGIC # Create Posts General DataFrame and write it to ADLS
 
 # COMMAND ----------
 
-# DBTITLE 1,Posts general
+# DBTITLE 1,Posts General
 # Get all columns from all DataFrames, created above
 company_general_columns = df_company_general.columns.to_list()
 company_awards_columns = df_company_awards.columns.to_list()
@@ -486,42 +532,21 @@ job_hiring_process = df_job_hiring_process.columns.to_list()
 existing_columns = company_general_columns + company_awards_columns + company_perks_columns + company_values_columns + job_requirements + job_benefits + job_responsibilities + job_tools + job_activities + job_hiring_process
 
 # Create posts DataFrame out of all columns that are not included in any of the above DataFrames
-df_posts = df_posts[[column for column in df_posts.columns if column not in existing_columns]].drop(columns=["locations", "benefits", "activities", "hiringProcessSteps", "tools", "company_perks", "company_values", "company_awards"])
+df_posts_general = df_posts[[column for column in df_posts.columns if column not in existing_columns]].drop(columns=["locations", "benefits", "activities", "hiringProcessSteps", "tools", "company_perks", "company_values", "company_awards"])
 
 # Replace values
-df_posts["salaryMin"] = df_posts["salaryMin"].replace(0, np.nan)
-df_posts["salaryMax"] = df_posts["salaryMax"].replace(0, np.nan)
+df_posts_general["salaryMin"] = df_posts_general["salaryMin"].replace(0, np.nan)
+df_posts_general["salaryMax"] = df_posts_general["salaryMax"].replace(0, np.nan)
 
 # Add ingestion date and source columns
-df_posts["ingestionDate"] = pd.to_datetime("today").strftime("%Y/%m/%d")
-df_posts["source"] = "Noblehire.io"
+df_posts_general["ingestionDate"] = pd.to_datetime("today").strftime("%Y/%m/%d")
+df_posts_general["source"] = "Noblehire.io"
 
 # Rename columns
-df_posts = df_posts.rename(columns={"id":"postId", "slug":"jobSlug", "title":"jobTitle"})
+df_posts_general = df_posts_general.rename(columns={"post_id":"postId", "slug":"jobSlug", "title":"jobTitle"})
 
 # Create ADLS location
 dbutils.fs.mkdirs(main_path + posts_path)
 
 # Write to ADLS
-df_job_activities.to_csv(f"{location_prefix}{main_path}{posts_path}noblehireio-posts-{date.today()}.csv")
-
-# COMMAND ----------
-
-df_job_activities[df_job_activities.activities_0_title.notna()]
-
-# COMMAND ----------
-
-for i in df_company_general["description"]:
-    print(i)
-    print("---NEXT---")
-
-# COMMAND ----------
-
-df_company_general["company_overview"] = df_company_general["company_overview"].str.replace("&nbsp;", "").str.replace("amp", "")
-
-for i in df_company_general["company_overview"]:
-    print(i)
-
-# COMMAND ----------
-
-
+df_posts_general.to_csv(f"{location_prefix}{main_path}{posts_path}noblehireio-posts-{date.today()}.csv")
