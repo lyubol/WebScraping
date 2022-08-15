@@ -30,6 +30,7 @@ job_responsibilities_path = f"jobResponsibilities/{date.today().year}/{date.toda
 job_tools_path = f"jobTools/{date.today().year}/{date.today().month}/{date.today().day}/"
 job_activities_path = f"jobActivities/{date.today().year}/{date.today().month}/{date.today().day}/"
 job_hiring_process_path = f"jobHiringProcess/{date.today().year}/{date.today().month}/{date.today().day}/"
+posts_path = f"posts/{date.today().year}/{date.today().month}/{date.today().day}/"
 
 # COMMAND ----------
 
@@ -156,8 +157,10 @@ df_company_general = (df_posts[[
 
 # Apply transformations to remove html tags from text columns
 df_company_general["company_overview"] = df_company_general["company_overview"].replace(r'<[^<>]*>', "", regex=True)
+df_company_general["company_overview"] = df_company_general["company_overview"].str.replace("&nbsp;", "").str.replace("amp", "")
 df_company_general["company_product"] = df_company_general["company_product"].replace(r'<[^<>]*>', "", regex=True)
 df_company_general["description"] = df_company_general["description"].replace(r'<[^<>]*>', "", regex=True)
+df_company_general["description"] = df_company_general["description"].str.replace("&nbsp;", "").str.replace("amp", "")
 df_company_general["productDescription"] = df_company_general["productDescription"].replace(r'<[^<>]*>', "", regex=True)
 
 # Create ADLS location
@@ -420,6 +423,7 @@ df_job_tools.to_csv(f"{location_prefix}{main_path}{job_tools_path}noblehireio-jo
 # DBTITLE 1,Job activities
 df_job_activities = (df_posts[[
     "company_id",
+    "activities_0_timePercents",
     "activities_0_title",
     "activities_1_timePercents",
     "activities_1_title",
@@ -462,7 +466,12 @@ df_job_activities.to_csv(f"{location_prefix}{main_path}{job_activities_path}nobl
 
 # COMMAND ----------
 
+existing_columns = company_general_columns + company_awards_columns + company_perks_columns + company_values_columns + job_requirements + job_benefits + job_responsibilities + job_tools + job_activities + job_hiring_process
+
+# COMMAND ----------
+
 # DBTITLE 1,Posts general
+# Get all columns from all DataFrames, created above
 company_general_columns = df_company_general.columns.to_list()
 company_awards_columns = df_company_awards.columns.to_list()
 company_perks_columns = df_company_perks.columns.to_list()
@@ -474,6 +483,45 @@ job_tools = df_job_tools.columns.to_list()
 job_activities = df_job_activities.columns.to_list()
 job_hiring_process = df_job_hiring_process.columns.to_list()
 
-df_posts[[column for column in df_posts.columns if column not in company_general_columns and column not in company_awards_columns and column not in company_perks_columns and column not in company_values_columns and column not in job_requirements and column not in job_benefits and column not in job_responsibilities and column not in job_tools and column not in job_activities and column not in job_hiring_process]]
+existing_columns = company_general_columns + company_awards_columns + company_perks_columns + company_values_columns + job_requirements + job_benefits + job_responsibilities + job_tools + job_activities + job_hiring_process
 
-# df['date'] = pd.to_datetime(df['date'],unit='s')
+# Create posts DataFrame out of all columns that are not included in any of the above DataFrames
+df_posts = df_posts[[column for column in df_posts.columns if column not in existing_columns]].drop(columns=["locations", "benefits", "activities", "hiringProcessSteps", "tools", "company_perks", "company_values", "company_awards"])
+
+# Replace values
+df_posts["salaryMin"] = df_posts["salaryMin"].replace(0, np.nan)
+df_posts["salaryMax"] = df_posts["salaryMax"].replace(0, np.nan)
+
+# Add ingestion date and source columns
+df_posts["ingestionDate"] = pd.to_datetime("today").strftime("%Y/%m/%d")
+df_posts["source"] = "Noblehire.io"
+
+# Rename columns
+df_posts = df_posts.rename(columns={"id":"postId", "slug":"jobSlug", "title":"jobTitle"})
+
+# Create ADLS location
+dbutils.fs.mkdirs(main_path + posts_path)
+
+# Write to ADLS
+df_job_activities.to_csv(f"{location_prefix}{main_path}{posts_path}noblehireio-posts-{date.today()}.csv")
+
+# COMMAND ----------
+
+df_job_activities[df_job_activities.activities_0_title.notna()]
+
+# COMMAND ----------
+
+for i in df_company_general["description"]:
+    print(i)
+    print("---NEXT---")
+
+# COMMAND ----------
+
+df_company_general["company_overview"] = df_company_general["company_overview"].str.replace("&nbsp;", "").str.replace("amp", "")
+
+for i in df_company_general["company_overview"]:
+    print(i)
+
+# COMMAND ----------
+
+
