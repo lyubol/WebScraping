@@ -11,12 +11,18 @@ from flatten_json import flatten
 # COMMAND ----------
 
 # DBTITLE 1,Define variables
+# Date variables 
+current_year = date.today().year
+current_month = "0" + str(date.today().month) if len(str(date.today().month)) == 1 else date.today().month
+current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 else date.today().day
+
 # Raw location variables
 location_prefix = "/dbfs"
 main_path = "/mnt/adlslirkov/it-job-boards/Noblehire.io/raw/"
-posts_path = f"posts/{date.today().year}/{date.today().month}/{date.today().day}/"
+posts_path = f"posts/{current_year}/{current_month}/{current_day}/"
 posts_file_name = f"noblehireio-posts-{date.today()}.csv"
 
+# Print current path
 print(f"Posts path: {posts_path}; Posts file name: {posts_file_name}")
 
 # COMMAND ----------

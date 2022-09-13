@@ -24,13 +24,20 @@ devbg_departments = [
     "technical-support"
 ]
 
+# Date variables 
+current_year = date.today().year
+current_month = "0" + str(date.today().month) if len(str(date.today().month)) == 1 else date.today().month
+current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 else date.today().day
+
 # Raw location variables
 location_prefix = "/dbfs"
 main_path = "/mnt/adlslirkov/it-job-boards/DEV.bg/raw/"
-posts_path = f"posts/{date.today().year}/{date.today().month}/{date.today().day}/"
+posts_path = f"posts/{current_year}/{current_month}/{current_day}/"
 posts_file_name = f"devbg-posts-{date.today()}.csv"
-descriptions_path = f"descriptions/{date.today().year}/{date.today().month}/{date.today().day}/"
-descriptions_file_name = f"devbg-descriptions-{date.today()}.csv"
+descriptions_path = f"descriptions/{current_year}/{current_month}/{current_day}/"
+descriptions_file_name = f"devbg-descriptions-{current_day}.csv"
+
+print(f"Posts path: {posts_path}; Posts file name: {posts_file_name}")
 
 # COMMAND ----------
 
@@ -54,9 +61,11 @@ df_posts = pd.DataFrame.from_dict(job_posts)
 # DBTITLE 1,Write to ADLS (Raw)
 # Create target location
 dbutils.fs.mkdirs(main_path + posts_path)
+print(f"Created: {main_path + posts_path}")
 
 # Write the Posts DataFrame to ADLS, raw location
 df_posts.to_csv(location_prefix + main_path + posts_path + posts_file_name)
+print(f"Saved at: {location_prefix + main_path + posts_path + posts_file_name}")
 
 # COMMAND ----------
 
@@ -83,8 +92,4 @@ df_posts.to_csv(location_prefix + main_path + posts_path + posts_file_name)
 
 # COMMAND ----------
 
-# MAGIC %run "lirkov/IT Job Boards/Tests Source to Raw"
-
-# COMMAND ----------
-
-# MAGIC %run "lirkov/IT Job Boards/Raw to Base to Delta"
+# %run "lirkov/IT Job Boards/Raw to Base to Delta"
