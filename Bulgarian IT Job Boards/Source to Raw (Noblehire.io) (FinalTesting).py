@@ -2,7 +2,9 @@
 from datetime import date
 import time
 import pandas as pd
+import json
 from flatten_json import flatten
+from pyspark.sql.functions import *
 
 # COMMAND ----------
 
@@ -40,11 +42,53 @@ while len(posts.getPosts(page)) != 0:
 
 # COMMAND ----------
 
-requests.get("https://prod-noblehire-api-000001.appspot.com/job?").json()
+data = requests.get("https://prod-noblehire-api-000001.appspot.com/job?").json()
+
+import json
+data = json.dumps(data)
+# d = json.loads(data)
+# print(type(d))
 
 # COMMAND ----------
 
-flatten_posts_list
+rddjson = sc.parallelize([data])
+df = sqlContext.read.json(rddjson)
+
+df.display()
+
+# COMMAND ----------
+
+posts = scrape_Noblehire()
+
+page = 0
+while len(posts.getPosts(page)) != 0:
+    page += 1
+    posts_response = posts.getPosts(page)
+
+    posts_response = json.dumps(posts_response)
+    
+    rddjson = sc.parallelize([posts_response])
+    df = sqlContext.read.json(rddjson)
+    
+    if df.count() > 0:
+        df.write.option("overwrite", True).format("json").save(f"/mnt/adlslirkov/it-job-boards/testing/JSON/{page}")
+    
+    time.sleep(10)
+
+# COMMAND ----------
+
+dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/testing/JSON/", True)
+
+# COMMAND ----------
+
+test = spark.read.format("json").load("/mnt/adlslirkov/it-job-boards/testing/JSON/7/")
+
+# COMMAND ----------
+
+rddjson = sc.parallelize([data])
+df = sqlContext.read.json(rddjson)
+
+df.display()
 
 # COMMAND ----------
 
@@ -60,15 +104,21 @@ display(df)
 
 # COMMAND ----------
 
-df.dtypes
+df2 = df.select(col("id"),json_tuple(col("company_locations_0_address"),"address_components","formatted_address","geometry","place_id","types")) \
+    .toDF("id","address_components","formatted_address","geometry","place_id","types")
+df2.printSchema()
 
 # COMMAND ----------
 
-rawDf.display()
+df2 = df2.select("id","address_components","formatted_address","place_id","types", json_tuple(col("geometry"), "bounds", "location", "location_type", "viewport")).toDF("id","address_components","formatted_address","place_id","types", "bounds", "location", "location_type", "viewport")
 
 # COMMAND ----------
 
-schema = StructType([
+df2.display()
+
+# COMMAND ----------
+
+                  schema = StructType([
     StructField('activities', StringType(), True), 
     StructField('activities_0_timePercents', IntegerType(), True),
     StructField('activities_0_title', StringType(), True),
