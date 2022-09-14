@@ -44,22 +44,27 @@ pd.set_option('display.max_columns', None)
 # COMMAND ----------
 
 # DBTITLE 1,Define variables
+# Date variables 
+current_year = date.today().year
+current_month = "0" + str(date.today().month) if len(str(date.today().month)) == 1 else date.today().month
+current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 else date.today().day
+
 # Base location variables
 location_prefix = "/dbfs"
 main_path = "/mnt/adlslirkov/it-job-boards/Noblehire.io/base/"
-company_locations_address_path = f"companyLocationsAddress/{date.today().year}/{date.today().month}/{date.today().day}/"
-company_general_path = f"companyGeneral/{date.today().year}/{date.today().month}/{date.today().day}/"
-company_awards_path = f"companyAwards/{date.today().year}/{date.today().month}/{date.today().day}/"
-company_perks_path = f"companyPerks/{date.today().year}/{date.today().month}/{date.today().day}/"
-company_values_path = f"companyValues/{date.today().year}/{date.today().month}/{date.today().day}/"
-company_locations_path = f"companyLocations/{date.today().year}/{date.today().month}/{date.today().day}/"
-job_requirements_path = f"jobRequirements/{date.today().year}/{date.today().month}/{date.today().day}/"
-job_benefits_path = f"jobBenefits/{date.today().year}/{date.today().month}/{date.today().day}/"
-job_responsibilities_path = f"jobResponsibilities/{date.today().year}/{date.today().month}/{date.today().day}/"
-job_tools_path = f"jobTools/{date.today().year}/{date.today().month}/{date.today().day}/"
-job_activities_path = f"jobActivities/{date.today().year}/{date.today().month}/{date.today().day}/"
-job_hiring_process_path = f"jobHiringProcess/{date.today().year}/{date.today().month}/{date.today().day}/"
-posts_path = f"posts/{date.today().year}/{date.today().month}/{date.today().day}/"
+company_locations_address_path = f"companyLocationsAddress/{current_year}/{current_month}/{current_day}/"
+company_general_path = f"companyGeneral/{current_year}/{current_month}/{current_day}/"
+company_awards_path = f"companyAwards/{current_year}/{current_month}/{current_day}/"
+company_perks_path = f"companyPerks/{current_year}/{current_month}/{current_day}/"
+company_values_path = f"companyValues/{current_year}/{current_month}/{current_day}/"
+company_locations_path = f"companyLocations/{current_year}/{current_month}/{current_day}/"
+job_requirements_path = f"jobRequirements/{current_year}/{current_month}/{current_day}/"
+job_benefits_path = f"jobBenefits/{current_year}/{current_month}/{current_day}/"
+job_responsibilities_path = f"jobResponsibilities/{current_year}/{current_month}/{current_day}/"
+job_tools_path = f"jobTools/{current_year}/{current_month}/{current_day}/"
+job_activities_path = f"jobActivities/{current_year}/{current_month}/{current_day}/"
+job_hiring_process_path = f"jobHiringProcess/{current_year}/{current_month}/{current_day}/"
+posts_path = f"posts/{current_year}/{current_month}/{current_day}/"
 
 # COMMAND ----------
 
@@ -102,7 +107,7 @@ def transformCompanyLocationColumns(DataFrame, column):
 
 # DBTITLE 1,Read Raw data
 # Read the data into Pandas DataFrame (instead of Spark DataFrame) to deal with commas in some columns' text. 
-df_posts = pd.read_csv("/dbfs/mnt/adlslirkov/it-job-boards/Noblehire.io/raw/posts/2022/8/14/noblehireio-posts-2022-08-14.csv")
+df_posts = pd.read_csv(f"/dbfs/mnt/adlslirkov/it-job-boards/Noblehire.io/raw/posts/{current_year}/{current_month}/{current_day}/noblehireio-posts-{current_year}-{current_month}-{current_day}.csv")
 
 # Remove duplicates if any (based on all columns)
 df_posts = df_posts.drop(columns=["Unnamed: 0"]).drop_duplicates()
@@ -208,17 +213,25 @@ df_company_general.to_csv(f"{location_prefix}{main_path}{company_general_path}no
 
 # DBTITLE 1,Company Awards
 # Create DataFrame to hold company awards information
+# df_company_awards = (df_posts[[
+#     "company_id",
+#     "company_awards_0_title",
+#     "company_awards_1_title",
+#     "company_awards_2_title",
+#     "company_awards_3_title",
+#     "company_awards_4_title",
+#     "company_awards_5_title",
+#     "company_awards_6_title",
+#     "company_awards_7_title",
+#     "company_awards_8_title"
+# ]])
+
+# The number of company awards columns might vary, so we need to dynamically select them instead of hard coding them.
+company_awards_columns = [column for column in df_posts.columns if "company_awards" in column and column != "company_awards"]
+
 df_company_awards = (df_posts[[
     "company_id",
-    "company_awards_0_title",
-    "company_awards_1_title",
-    "company_awards_2_title",
-    "company_awards_3_title",
-    "company_awards_4_title",
-    "company_awards_5_title",
-    "company_awards_6_title",
-    "company_awards_7_title",
-    "company_awards_8_title"
+    *company_awards_columns
 ]])
 
 # Create ADLS location
@@ -230,45 +243,53 @@ df_company_awards.to_csv(f"{location_prefix}{main_path}{company_awards_path}nobl
 # COMMAND ----------
 
 # DBTITLE 1,Company Perks
-# Create DataFrame to hold company awards information
+# # Create DataFrame to hold company awards information
+# df_company_perks = (df_posts[[
+#     "company_id",
+#     "company_perks_0_title",
+#     "company_perks_0_text",
+#     "company_perks_1_title",
+#     "company_perks_1_text",
+#     "company_perks_2_title",
+#     "company_perks_2_text",
+#     "company_perks_3_title",
+#     "company_perks_3_text",
+#     "company_perks_4_title",
+#     "company_perks_4_text",
+#     "company_perks_5_title",
+#     "company_perks_5_text",
+#     "company_perks_6_title",
+#     "company_perks_6_text",
+#     "company_perks_7_title",
+#     "company_perks_7_text",
+#     "company_perks_8_title",
+#     "company_perks_8_text",
+#     "company_perks_9_title",
+#     "company_perks_9_text",
+#     "company_perks_10_title",
+#     "company_perks_10_text",
+#     "company_perks_11_title",
+#     "company_perks_11_text",
+#     "company_perks_12_title",
+#     "company_perks_12_text",
+#     "company_perks_13_title",
+#     "company_perks_13_text",
+#     "company_perks_14_title",
+#     "company_perks_14_text",
+#     "company_perks_15_title",
+#     "company_perks_15_text",
+#     "company_perks_16_title",
+#     "company_perks_16_text",
+#     "company_perks_17_title",
+#     "company_perks_17_text" 
+# ]])
+
+# The number of company perks columns might vary, so we need to dynamically select them instead of hard coding them.
+company_perks_columns = [column for column in df_posts.columns if "company_perks" in column and column != "company_perks"]
+
 df_company_perks = (df_posts[[
     "company_id",
-    "company_perks_0_title",
-    "company_perks_0_text",
-    "company_perks_1_title",
-    "company_perks_1_text",
-    "company_perks_2_title",
-    "company_perks_2_text",
-    "company_perks_3_title",
-    "company_perks_3_text",
-    "company_perks_4_title",
-    "company_perks_4_text",
-    "company_perks_5_title",
-    "company_perks_5_text",
-    "company_perks_6_title",
-    "company_perks_6_text",
-    "company_perks_7_title",
-    "company_perks_7_text",
-    "company_perks_8_title",
-    "company_perks_8_text",
-    "company_perks_9_title",
-    "company_perks_9_text",
-    "company_perks_10_title",
-    "company_perks_10_text",
-    "company_perks_11_title",
-    "company_perks_11_text",
-    "company_perks_12_title",
-    "company_perks_12_text",
-    "company_perks_13_title",
-    "company_perks_13_text",
-    "company_perks_14_title",
-    "company_perks_14_text",
-    "company_perks_15_title",
-    "company_perks_15_text",
-    "company_perks_16_title",
-    "company_perks_16_text",
-    "company_perks_17_title",
-    "company_perks_17_text" 
+    *company_perks_columns
 ]])
 
 # Create ADLS location
@@ -280,29 +301,37 @@ df_company_perks.to_csv(f"{location_prefix}{main_path}{company_perks_path}nobleh
 # COMMAND ----------
 
 # DBTITLE 1,Company Values
-# Create DataFrame to hold company awards information
+# # Create DataFrame to hold company awards information
+# df_company_values = (df_posts[[
+#     "company_id",
+#     "company_values_0_title",
+#     "company_values_0_text",
+#     "company_values_1_title",
+#     "company_values_1_text",
+#     "company_values_2_title",
+#     "company_values_2_text",
+#     "company_values_3_title",
+#     "company_values_3_text",
+#     "company_values_4_title",
+#     "company_values_4_text",
+#     "company_values_5_title",
+#     "company_values_5_text",
+#     "company_values_6_title",
+#     "company_values_6_text",
+#     "company_values_7_title",
+#     "company_values_7_text",
+#     "company_values_8_title",
+#     "company_values_8_text",
+#     "company_values_9_title",
+#     "company_values_9_text" 
+# ]])
+
+# The number of company values columns might vary, so we need to dynamically select them instead of hard coding them.
+company_values_columns = [column for column in df_posts.columns if "company_values" in column and column != "company_values"]
+
 df_company_values = (df_posts[[
     "company_id",
-    "company_values_0_title",
-    "company_values_0_text",
-    "company_values_1_title",
-    "company_values_1_text",
-    "company_values_2_title",
-    "company_values_2_text",
-    "company_values_3_title",
-    "company_values_3_text",
-    "company_values_4_title",
-    "company_values_4_text",
-    "company_values_5_title",
-    "company_values_5_text",
-    "company_values_6_title",
-    "company_values_6_text",
-    "company_values_7_title",
-    "company_values_7_text",
-    "company_values_8_title",
-    "company_values_8_text",
-    "company_values_9_title",
-    "company_values_9_text" 
+    *company_values_columns
 ]])
 
 # Create ADLS location
@@ -324,26 +353,34 @@ df_posts = df_posts.rename(columns={"id":"post_id"})
 # COMMAND ----------
 
 # DBTITLE 1,Job Requirements
+# df_job_requirements = (df_posts[[
+#     "post_id",
+#     "requirements_0_title",
+#     "requirements_1_title",
+#     "requirements_2_title",
+#     "requirements_3_title",
+#     "requirements_4_title",
+#     "requirements_5_title",
+#     "requirements_6_title",
+#     "requirements_7_title",
+#     "requirements_8_title",
+#     "requirements_9_title",
+#     "requirements_10_title",
+#     "requirements_11_title",
+#     "requirements_12_title",
+#     "requirements_13_title",
+#     "requirements_14_title",
+#     "requirements_15_title",
+#     "requirements_16_title",
+#     "requirements_17_title"
+# ]])
+
+# The number of requirements columns might vary, so we need to dynamically select them instead of hard coding them.
+requirements_columns = [column for column in df_posts.columns if "requirements" in column]
+
 df_job_requirements = (df_posts[[
     "post_id",
-    "requirements_0_title",
-    "requirements_1_title",
-    "requirements_2_title",
-    "requirements_3_title",
-    "requirements_4_title",
-    "requirements_5_title",
-    "requirements_6_title",
-    "requirements_7_title",
-    "requirements_8_title",
-    "requirements_9_title",
-    "requirements_10_title",
-    "requirements_11_title",
-    "requirements_12_title",
-    "requirements_13_title",
-    "requirements_14_title",
-    "requirements_15_title",
-    "requirements_16_title",
-    "requirements_17_title"
+    *requirements_columns
 ]])
 
 # Create ADLS location
@@ -355,39 +392,47 @@ df_job_requirements.to_csv(f"{location_prefix}{main_path}{job_requirements_path}
 # COMMAND ----------
 
 # DBTITLE 1,Job Benefits
+# df_job_benefits = (df_posts[[
+#     "post_id",
+#     "benefits_0_title",
+#     "benefits_1_title",
+#     "benefits_2_title",
+#     "benefits_3_title",
+#     "benefits_4_title",
+#     "benefits_5_title",
+#     "benefits_6_title",
+#     "benefits_7_title",
+#     "benefits_8_title",
+#     "benefits_9_title",
+#     "benefits_10_title",
+#     "benefits_11_title",
+#     "benefits_12_title",
+#     "benefits_13_title",
+#     "benefits_14_title",
+#     "benefits_15_title",
+#     "benefits_16_title",
+#     "benefits_17_title",
+#     "benefits_18_title",
+#     "benefits_19_title",
+#     "benefits_20_title",
+#     "benefits_21_title",
+#     "benefits_22_title",
+#     "benefits_23_title",
+#     "benefits_24_title",
+#     "benefits_25_title",
+#     "benefits_26_title",
+#     "benefits_27_title",
+#     "benefits_28_title",
+#     "benefits_29_title",
+#     "benefits_30_title"
+# ]])
+
+# The number of benefits columns might vary, so we need to dynamically select them instead of hard coding them.
+benefits_columns = [column for column in df_posts.columns if "benefits" in column and column != "benefits"]
+
 df_job_benefits = (df_posts[[
     "post_id",
-    "benefits_0_title",
-    "benefits_1_title",
-    "benefits_2_title",
-    "benefits_3_title",
-    "benefits_4_title",
-    "benefits_5_title",
-    "benefits_6_title",
-    "benefits_7_title",
-    "benefits_8_title",
-    "benefits_9_title",
-    "benefits_10_title",
-    "benefits_11_title",
-    "benefits_12_title",
-    "benefits_13_title",
-    "benefits_14_title",
-    "benefits_15_title",
-    "benefits_16_title",
-    "benefits_17_title",
-    "benefits_18_title",
-    "benefits_19_title",
-    "benefits_20_title",
-    "benefits_21_title",
-    "benefits_22_title",
-    "benefits_23_title",
-    "benefits_24_title",
-    "benefits_25_title",
-    "benefits_26_title",
-    "benefits_27_title",
-    "benefits_28_title",
-    "benefits_29_title",
-    "benefits_30_title"
+    *benefits_columns
 ]])
 
 # Create ADLS location
@@ -399,29 +444,37 @@ df_job_benefits.to_csv(f"{location_prefix}{main_path}{job_benefits_path}noblehir
 # COMMAND ----------
 
 # DBTITLE 1,Job Responsibilities
+# df_job_responsibilities = (df_posts[[
+#     "post_id",
+#     "responsibilities_0_title",
+#     "responsibilities_1_title",
+#     "responsibilities_2_title",
+#     "responsibilities_3_title",
+#     "responsibilities_4_title",
+#     "responsibilities_5_title",
+#     "responsibilities_6_title",
+#     "responsibilities_7_title",
+#     "responsibilities_8_title",
+#     "responsibilities_9_title",
+#     "responsibilities_10_title",
+#     "responsibilities_11_title",
+#     "responsibilities_12_title",
+#     "responsibilities_13_title",
+#     "responsibilities_14_title",
+#     "responsibilities_15_title",
+#     "responsibilities_16_title",
+#     "responsibilities_17_title",
+#     "responsibilities_18_title",
+#     "responsibilities_19_title",
+#     "responsibilities_20_title"
+# ]])
+
+# The number of responsibilities columns might vary, so we need to dynamically select them instead of hard coding them.
+responsibilities_columns = [column for column in df_posts.columns if "responsibilities" in column]
+
 df_job_responsibilities = (df_posts[[
     "post_id",
-    "responsibilities_0_title",
-    "responsibilities_1_title",
-    "responsibilities_2_title",
-    "responsibilities_3_title",
-    "responsibilities_4_title",
-    "responsibilities_5_title",
-    "responsibilities_6_title",
-    "responsibilities_7_title",
-    "responsibilities_8_title",
-    "responsibilities_9_title",
-    "responsibilities_10_title",
-    "responsibilities_11_title",
-    "responsibilities_12_title",
-    "responsibilities_13_title",
-    "responsibilities_14_title",
-    "responsibilities_15_title",
-    "responsibilities_16_title",
-    "responsibilities_17_title",
-    "responsibilities_18_title",
-    "responsibilities_19_title",
-    "responsibilities_20_title"
+    *responsibilities_columns
 ]])
 
 # Create ADLS location
@@ -433,28 +486,36 @@ df_job_responsibilities.to_csv(f"{location_prefix}{main_path}{job_responsibiliti
 # COMMAND ----------
 
 # DBTITLE 1,Job Tools
+# df_job_tools = (df_posts[[
+#     "post_id",
+#     "tools_0",
+#     "tools_1",
+#     "tools_2",
+#     "tools_3",
+#     "tools_4",
+#     "tools_5",
+#     "tools_6",
+#     "tools_7",
+#     "tools_8",
+#     "tools_9",
+#     "tools_10",
+#     "tools_11",
+#     "tools_12",
+#     "tools_13",
+#     "tools_14",
+#     "tools_15",
+#     "tools_16",
+#     "tools_17",
+#     "tools_18",
+#     "tools_19"
+# ]])
+
+# The number of tools columns might vary, so we need to dynamically select them instead of hard coding them.
+tools_columns = [column for column in df_posts.columns if "tools" in column and column != "tools"]
+
 df_job_tools = (df_posts[[
     "post_id",
-    "tools_0",
-    "tools_1",
-    "tools_2",
-    "tools_3",
-    "tools_4",
-    "tools_5",
-    "tools_6",
-    "tools_7",
-    "tools_8",
-    "tools_9",
-    "tools_10",
-    "tools_11",
-    "tools_12",
-    "tools_13",
-    "tools_14",
-    "tools_15",
-    "tools_16",
-    "tools_17",
-    "tools_18",
-    "tools_19"
+    *tools_columns
 ]])
 
 # Create ADLS location
@@ -466,22 +527,30 @@ df_job_tools.to_csv(f"{location_prefix}{main_path}{job_tools_path}noblehireio-jo
 # COMMAND ----------
 
 # DBTITLE 1,Job Activities
+# df_job_activities = (df_posts[[
+#     "post_id",
+#     "activities_0_timePercents",
+#     "activities_0_title",
+#     "activities_1_timePercents",
+#     "activities_1_title",
+#     "activities_2_timePercents",
+#     "activities_2_title",
+#     "activities_3_timePercents",
+#     "activities_3_title",
+#     "activities_4_timePercents",
+#     "activities_4_title",
+#     "activities_5_timePercents",
+#     "activities_5_title",
+#     "activities_6_timePercents",
+#     "activities_6_title"
+# ]])
+
+# The number of activities columns might vary, so we need to dynamically select them instead of hard coding them.
+activities_columns = [column for column in df_posts.columns if "activities" in column and column != "activities"]
+
 df_job_activities = (df_posts[[
     "post_id",
-    "activities_0_timePercents",
-    "activities_0_title",
-    "activities_1_timePercents",
-    "activities_1_title",
-    "activities_2_timePercents",
-    "activities_2_title",
-    "activities_3_timePercents",
-    "activities_3_title",
-    "activities_4_timePercents",
-    "activities_4_title",
-    "activities_5_timePercents",
-    "activities_5_title",
-    "activities_6_timePercents",
-    "activities_6_title"
+    *activities_columns
 ]])
 
 # Create ADLS location
@@ -493,14 +562,22 @@ df_job_activities.to_csv(f"{location_prefix}{main_path}{job_activities_path}nobl
 # COMMAND ----------
 
 # DBTITLE 1,Job Hiring Process
+# df_job_hiring_process = (df_posts[[
+#     "post_id",
+#     "hiringProcessSteps_0",
+#     "hiringProcessSteps_1",
+#     "hiringProcessSteps_2",
+#     "hiringProcessSteps_3",
+#     "hiringProcessSteps_4",
+#     "hiringProcessSteps_5"
+# ]])
+
+# The number of hiringProcessSteps columns might vary, so we need to dynamically select them instead of hard coding them.
+hiring_process_columns = [column for column in df_posts.columns if "hiringProcessSteps" in column and column != "hiringProcessSteps"]
+
 df_job_hiring_process = (df_posts[[
     "post_id",
-    "hiringProcessSteps_0",
-    "hiringProcessSteps_1",
-    "hiringProcessSteps_2",
-    "hiringProcessSteps_3",
-    "hiringProcessSteps_4",
-    "hiringProcessSteps_5"
+    *hiring_process_columns
 ]])
 
 # Create ADLS location
