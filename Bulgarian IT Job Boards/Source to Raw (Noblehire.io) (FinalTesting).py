@@ -42,6 +42,85 @@ while len(posts.getPosts(page)) != 0:
 
 # COMMAND ----------
 
+posts = scrape_Noblehire()
+
+page = 0
+while len(posts.getPosts(page)) != 0:
+    page += 1
+    posts_response = posts.getPosts(page)
+
+    posts_response = json.dumps(posts_response)
+    
+    if len(posts_response) > 0:
+        with open(f"/dbfs/mnt/adlslirkov/it-job-boards/testing/JSON/{page}.json", "w") as f:
+            f.write(posts_response)
+            f.close()
+    
+    time.sleep(10)
+
+# COMMAND ----------
+
+df = spark.read.format("json").load("/mnt/adlslirkov/it-job-boards/testing/JSON/2.json")
+
+# df.select(explode_outer("activities").alias("activities"))
+
+df.display()
+
+# COMMAND ----------
+
+df.printSchema()
+
+# COMMAND ----------
+
+tools_max_size = df.select(max(size(col("tools")))).collect()
+
+results={}
+for i in tools_max_size:
+  results.update(i.asDict())
+
+df_tools = df.select([col("tools")[i] for i in range(results["max(size(tools))"])])
+
+df_tools.display()
+
+# COMMAND ----------
+
+tools_max_size = df.select(max(size(col("activities")))).collect()
+
+results={}
+for i in tools_max_size:
+  results.update(i.asDict())
+
+df_activities = df.select([col("activities")[i] for i in range(results["max(size(activities))"])])
+
+# df_activities.dtypes
+
+# df_activities.select(col("activities[0].timePercents").alias("activities_0_timePercents"), col("activities[0].title").alias("activities_0_tools")).display()
+
+# cols = []
+# for column in df_activities.columns:
+#     cols.append(f"col('{column}').timePercents.alias('{column}_timePercents')")
+#     cols.append(f"col('{column}').title.alias('{column}_title')")
+    
+df_activities.select("activities[0].timePercents").display()
+
+# COMMAND ----------
+
+activities[0]df_activitiesdf_activities.select(col('activities[0]').timePercents.alias('activities[0]_timePercents'), col('activities[0]').title.alias('activities[0]_title')).display()
+
+# COMMAND ----------
+
+df.select("activities.timePercents").display()
+
+# COMMAND ----------
+
+json_data = requests.get("https://prod-noblehire-api-000001.appspot.com/job?").json()
+j = json.dumps(json_data)
+with open("/dbfs/mnt/adlslirkov/it-job-boards/testing/page1.json", "w") as f:
+    f.write(j)
+    f.close()
+
+# COMMAND ----------
+
 data = requests.get("https://prod-noblehire-api-000001.appspot.com/job?").json()
 
 import json
