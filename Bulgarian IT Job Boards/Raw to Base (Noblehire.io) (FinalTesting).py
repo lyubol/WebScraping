@@ -166,22 +166,48 @@ df_benefits.display()
 # COMMAND ----------
 
 # DBTITLE 1,Company
-df_companies = flatten_struct_df(df.select("company").distinct())
+# df_companies = flatten_struct_df(df.select("company").distinct())
 
-df_companies.display()
+# df_companies.display()
 
 # COMMAND ----------
 
 # DBTITLE 1,Company
 df_companies = flatten(df.select("company"))
 
+# df = df.drop("company")
+
+df_companies = (df_companies
+  # company_locations_address
+  .select("*", json_tuple("company_locations_address", "address_components", "formatted_address", "geometry", "place_id", "types").alias("address_components", "formatted_address", "geometry", "place_id", "types")).drop("company_locations_address")
+ # geometry
+ .select("*", json_tuple("geometry", "bounds", "location", "location_type", "viewport").alias("bounds", "location", "location_type", "viewport")).drop("geometry")
+ # location
+ .select("*", json_tuple("location", "lat", "lng").alias("latitude", "longitude")).drop("location")
+ # viewport
+ .select("*", json_tuple("viewport", "northeast", "southwest").alias("viewport_northeast", "viewport_southwest")).drop("viewport")
+ .select("*", json_tuple("viewport_northeast", "lat", "lng").alias("viewport_northeast_latitude", "viewport_northeast_longitude")).drop("viewport_northeast")
+ .select("*", json_tuple("viewport_southwest", "lat", "lng").alias("viewport_southwest_latitude", "viewport_southwest_longitude")).drop("viewport_southwest")
+ # bounds
+ .select("*", json_tuple("bounds", "northeast", "southwest").alias("bounds_northeast", "bounds_southwest")).drop("bounds")
+ .select("*", json_tuple("bounds_northeast", "lat", "lng").alias("bounds_northeast_latitude", "bounds_northeast_longitude")).drop("bounds_northeast")
+ .select("*", json_tuple("bounds_southwest", "lat", "lng").alias("bounds_southwest_latitude", "bounds_southwest_longitude")).drop("bounds_southwest")
+# types - can be removed
+ .selectExpr("*", "from_json(types, 'array<string>') as types_array").drop("types")
+)
+
+df_companies = (df_companies
+ # types - continuation
+ .select("*", *[col("types_array")[i] for i in range(df_locations.select(max(size(col("types_array"))).alias("max_size")).first()["max_size"])]).drop("types_array")
+)
+
 df_companies.display()
 
 # COMMAND ----------
 
-rawDf = flatten(df.select("company"))
+# rawDf = flatten(df.select("company"))
 
-rawDf.display()
+# rawDf.display()
 
 # COMMAND ----------
 
@@ -242,7 +268,7 @@ for i in locations_max_size:
 df_locations = df.select(col("id"), *[col("locations")[i] for i in range(results["max(size(locations))"])])
 
 # Drop the column from the Raw DataFrame
-df = df.drop("tools")
+df = df.drop("locations")
 
 df_locations = flatten(df_locations)
 
@@ -257,70 +283,43 @@ df_locations.display()
 
 # COMMAND ----------
 
-df_locations_1 = (df_locations
-    .select(
-        "id",
-        json_tuple(
-            col("locations[0]_address"), 
-            "address_components", 
-            "formatted_address",
-            "geometry",
-            "place_id",
-            "types"),
-        "locations[0]_comment",
-        "locations[0]_founded",
-        "locations[0]_id",
-        "locations[0]_teamSize"
-    )
-    .toDF(
-        "id",
-        "address_components",
-        "formatted_address",
-        "geometry",
-        "place_id",
-        "types",
-        "locations[0]_comment",
-        "locations[0]_founded",
-        "locations[0]_id",
-        "locations[0]_teamSize")
-    )
+# Unpack the location columns
 
+df_locations = (df_locations
+ # Take locations 0
+ .select("id", "locations_0_address", "locations_0_comment", "locations_0_founded", "locations_0_id", "locations_0_teamSize")
+ # locations_0_address
+ .select("*", json_tuple("locations_0_address", "address_components", "formatted_address", "geometry", "place_id", "types").alias("address_components", "formatted_address", "geometry", "place_id", "types")).drop("locations_0_address") 
+ # geometry
+ .select("*", json_tuple("geometry", "bounds", "location", "location_type", "viewport").alias("bounds", "location", "location_type", "viewport")).drop("geometry")
+ # location
+ .select("*", json_tuple("location", "lat", "lng").alias("latitude", "longitude")).drop("location")
+ # viewport
+ .select("*", json_tuple("viewport", "northeast", "southwest").alias("viewport_northeast", "viewport_southwest")).drop("viewport")
+ .select("*", json_tuple("viewport_northeast", "lat", "lng").alias("viewport_northeast_latitude", "viewport_northeast_longitude")).drop("viewport_northeast")
+ .select("*", json_tuple("viewport_southwest", "lat", "lng").alias("viewport_southwest_latitude", "viewport_southwest_longitude")).drop("viewport_southwest")
+ # bounds
+ .select("*", json_tuple("bounds", "northeast", "southwest").alias("bounds_northeast", "bounds_southwest")).drop("bounds")
+ .select("*", json_tuple("bounds_northeast", "lat", "lng").alias("bounds_northeast_latitude", "bounds_northeast_longitude")).drop("bounds_northeast")
+ .select("*", json_tuple("bounds_southwest", "lat", "lng").alias("bounds_southwest_latitude", "bounds_southwest_longitude")).drop("bounds_southwest")
+ # types - can be removed
+ .selectExpr("*", "from_json(types, 'array<string>') as types_array").drop("types")
+)
+                
+df_locations = (df_locations
+ # types - continuation
+ .select("*", *[col("types_array")[i] for i in range(df_locations.select(max(size(col("types_array"))).alias("max_size")).first()["max_size"])]).drop("types_array")
+)
 
-df_locations_2 = (df_locations_1
-    .select(
-        "id",
-        "address_components",
-        "formatted_address",
-        json_tuple(
-            col("geometry"), 
-            "bounds", 
-            "location", 
-            "location_type", 
-            "viewport"),
-        "place_id",
-        "types",
-        "locations[0]_comment",
-        "locations[0]_founded",
-        "locations[0]_id",
-        "locations[0]_teamSize"
-    )
-    .toDF(
-        "id",
-        "address_components",
-        "formatted_address",
-        "bounds", 
-        "location", 
-        "location_type", 
-        "viewport",
-        "place_id",
-        "types",
-        "locations[0]_comment",
-        "locations[0]_founded",
-        "locations[0]_id",
-        "locations[0]_teamSize")
-    )
+df_locations.display()
 
-df_locations_2.display()
+# COMMAND ----------
+
+.selectExpr(
+    "*", "from_json(types, 'array<string>')"
+)df_locations.selectExpr(
+    "*", "from_json(types, 'array<string>')"
+).display()
 
 # COMMAND ----------
 
@@ -404,6 +403,8 @@ df_tools.display()
 
 # COMMAND ----------
 
-flat_df = flatten_struct_df(df)
+df.display()
 
-flat_df.display()
+# COMMAND ----------
+
+
