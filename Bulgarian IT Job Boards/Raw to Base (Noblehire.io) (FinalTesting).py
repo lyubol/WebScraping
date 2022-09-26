@@ -109,6 +109,11 @@ df.display()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Activities
+
+# COMMAND ----------
+
 # DBTITLE 1,Activities
 # Dynamically unpack columns with Struct or Array data type
 
@@ -134,6 +139,11 @@ for column in df_activities.columns:
     
 
 df_activities.display()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Benefits
 
 # COMMAND ----------
 
@@ -172,36 +182,178 @@ df_benefits.display()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Company
+
+# COMMAND ----------
+
 # DBTITLE 1,Company
-df_companies = flatten(df.select("company"))
+# df_companies = flatten(df.select("company"))
 
-# df = df.drop("company")
+# # df = df.drop("company")
 
-df_companies = (df_companies
-  # company_locations_address
-  .select("*", json_tuple("company_locations_address", "address_components", "formatted_address", "geometry", "place_id", "types").alias("address_components", "formatted_address", "geometry", "place_id", "types")).drop("company_locations_address")
- # geometry
- .select("*", json_tuple("geometry", "bounds", "location", "location_type", "viewport").alias("bounds", "location", "location_type", "viewport")).drop("geometry")
- # location
- .select("*", json_tuple("location", "lat", "lng").alias("latitude", "longitude")).drop("location")
- # viewport
- .select("*", json_tuple("viewport", "northeast", "southwest").alias("viewport_northeast", "viewport_southwest")).drop("viewport")
- .select("*", json_tuple("viewport_northeast", "lat", "lng").alias("viewport_northeast_latitude", "viewport_northeast_longitude")).drop("viewport_northeast")
- .select("*", json_tuple("viewport_southwest", "lat", "lng").alias("viewport_southwest_latitude", "viewport_southwest_longitude")).drop("viewport_southwest")
- # bounds
- .select("*", json_tuple("bounds", "northeast", "southwest").alias("bounds_northeast", "bounds_southwest")).drop("bounds")
- .select("*", json_tuple("bounds_northeast", "lat", "lng").alias("bounds_northeast_latitude", "bounds_northeast_longitude")).drop("bounds_northeast")
- .select("*", json_tuple("bounds_southwest", "lat", "lng").alias("bounds_southwest_latitude", "bounds_southwest_longitude")).drop("bounds_southwest")
-# types - can be removed
- .selectExpr("*", "from_json(types, 'array<string>') as types_array").drop("types")
-)
+# df_companies = (df_companies
+#   # company_locations_address
+#   .select(
+#       "*", 
+#       json_tuple(
+#           "company_locations_address", 
+#           "address_components", 
+#           "formatted_address", 
+#           "geometry", 
+#           "place_id", 
+#           "types"
+#       ).alias(
+#           "address_components", 
+#           "formatted_address", 
+#           "geometry", 
+#           "place_id", 
+#           "types")
+#   ).drop("company_locations_address")
+#  # geometry
+#  .select(
+#      "*", 
+#      json_tuple(
+#          "geometry", 
+#          "bounds", 
+#          "location", 
+#          "location_type", 
+#          "viewport"
+#      ).alias(
+#          "bounds", 
+#          "location", 
+#          "location_type", 
+#          "viewport")
+#  ).drop("geometry")
+#  # location
+#  .select(
+#      "*", 
+#      json_tuple(
+#          "location", 
+#          "lat", 
+#          "lng"
+#      ).alias(
+#          "latitude", 
+#          "longitude"
+#      )
+#  ).drop("location")
+#  # viewport
+#  .select(
+#      "*", 
+#      json_tuple(
+#          "viewport", 
+#          "northeast", 
+#          "southwest"
+#      ).alias(
+#          "viewport_northeast", 
+#          "viewport_southwest"
+#      )
+#  ).drop("viewport")
+#  .select(
+#      "*", 
+#      json_tuple(
+#          "viewport_northeast", 
+#          "lat", 
+#          "lng"
+#      ).alias(
+#          "viewport_northeast_latitude", 
+#          "viewport_northeast_longitude"
+#      )
+#  ).drop("viewport_northeast")
+#  .select(
+#      "*", 
+#      json_tuple(
+#          "viewport_southwest", 
+#          "lat", 
+#          "lng"
+#      ).alias(
+#          "viewport_southwest_latitude", 
+#          "viewport_southwest_longitude"
+#      )
+#  ).drop("viewport_southwest")
+#  # bounds
+#  .select(
+#      "*", 
+#      json_tuple(
+#          "bounds", 
+#          "northeast", 
+#          "southwest"
+#      ).alias(
+#          "bounds_northeast", 
+#          "bounds_southwest"
+#      )
+#  ).drop("bounds")
+#  .select(
+#      "*", 
+#      json_tuple(
+#          "bounds_northeast", 
+#          "lat", 
+#          "lng"
+#      ).alias(
+#          "bounds_northeast_latitude", 
+#          "bounds_northeast_longitude"
+#      )
+#  ).drop("bounds_northeast")
+#  .select(
+#      "*", 
+#      json_tuple(
+#          "bounds_southwest", 
+#          "lat", 
+#          "lng"
+#      ).alias(
+#          "bounds_southwest_latitude", 
+#          "bounds_southwest_longitude"
+#      )
+#  ).drop("bounds_southwest")
+# # types - can be removed
+#  .selectExpr(
+#      "*", 
+#      "from_json(types, 'array<string>') as types_array"
+#  ).drop("types")
+# ).cache()
 
-df_companies = (df_companies
- # types - continuation
- .select("*", *[col("types_array")[i] for i in range(df_locations.select(max(size(col("types_array"))).alias("max_size")).first()["max_size"])]).drop("types_array")
-)
 
-df_companies.display()
+# df_companies = (df_companies
+#  # types - continuation
+#  .select(
+#      "*", 
+#      *[col("types_array")[i] for i in range(df_companies.select(max(size(col("types_array"))).alias("max_size")).first()["max_size"])]
+#  ).drop("types_array")
+# )
+
+
+# df_companies = df_companies.selectExpr(
+#     "*", 
+#     "from_json(address_components, 'array<struct<long_name:string,short_name:string,types:array<string>>>') as address_components_array"
+# ).drop("address_components")
+
+
+# df_companies = df_companies.select(
+#     "*", 
+#     *[col("address_components_array")[i] for i in range(df_companies.select(max(size(col("address_components_array"))).alias("max_size")).first()["max_size"])]
+# ).drop("address_components_array")
+
+
+# df_companies = df_companies.select(
+#     "*", 
+#     *[col(column).long_name for column in df_companies.columns if "address_components_array" in column], *[col(column).short_name for column in df_companies.columns if "address_components_array"       in column], *[col(column).types for column in df_companies.columns if "address_components_array" in column]
+# ).drop(
+#     *[column for column in df_companies.columns if column.startswith("address_components_array[") == True and column.endswith("]") == True]
+# )
+
+
+# df_companies = df_companies.toDF(*(column.replace('.', '_') for column in df_companies.columns))
+
+
+# df_companies = df_companies.select(
+#     "*", 
+#     *[col(column)[i] for column in df_companies.columns if column.endswith("types") == True for i in range(df_companies.select(max(size(col(column))).alias(str(column) + "_max_size")).first()         [str(column) + "_max_size"])]
+# ).drop(
+#     *[column for column in df_companies.columns if column.endswith("types") == True]
+# )
+
+
+# df_companies.display()
 
 # COMMAND ----------
 
@@ -229,6 +381,11 @@ df_companies.display()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Hiring Process Steps
+
+# COMMAND ----------
+
 # DBTITLE 1,hiringProcessSteps
 # Dynamically unpack columns with Struct or Array data type
 
@@ -252,6 +409,11 @@ for column in df_hiringprocesssteps.columns:
     
 
 df_hiringprocesssteps.display()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Locations
 
 # COMMAND ----------
 
@@ -283,43 +445,364 @@ df_locations.display()
 
 # COMMAND ----------
 
+# JUST TESTING...
+
+# Unpack the location columns
+for column in df_locations.columns:
+    if column.endswith("address") == True:
+        
+        df_locations_clean = (df_locations
+         # Take locations 0
+         .select(
+             "id", 
+             column
+         )
+         # locations_0_address
+         .select(
+             "*", 
+             json_tuple(
+                 column, 
+                 "address_components", 
+                 "formatted_address", 
+                 "geometry", 
+                 "place_id", 
+                 "types"
+             ).alias(
+                 column + "_" + "address_components", 
+                 column + "_" + "formatted_address", 
+                 column + "_" + "geometry", 
+                 column + "_" + "place_id", 
+                 column + "_" + "types"
+             )
+         ).drop(column) 
+         # geometry
+         .select(
+             "*", 
+             json_tuple(
+                 column + "_" + "geometry", 
+                 column + "_" + "bounds", 
+                 column + "_" + "location", 
+                 column + "_" + "location_type", 
+                 column + "_" + "viewport"
+             ).alias(
+                 column + "_" + "bounds", 
+                 column + "_" + "location", 
+                 column + "_" + "location_type", 
+                 column + "_" + "viewport"
+             )
+         ).drop(column + "_" + "geometry")
+         # location
+         .select(
+             "*", 
+             json_tuple(
+                 column + "_" + "location", 
+                 column + "_" + "lat", 
+                 column + "_" + "lng"
+             ).alias(
+                 column + "_" + "latitude", 
+                 column + "_" + "longitude")
+         ).drop(column + "_" + "location")
+         # viewport
+         .select(
+             "*", 
+             json_tuple(
+                 column + "_" + "viewport", 
+                 column + "_" + "northeast", 
+                 column + "_" + "southwest"
+             ).alias(
+                 column + "_" + "viewport_northeast", 
+                 column + "_" + "viewport_southwest"
+             )
+         ).drop(column + "_" + "viewport")
+         .select(
+             "*", 
+             json_tuple(
+                 column + "_" + "viewport_northeast", 
+                 column + "_" + "lat", 
+                 column + "_" + "lng"
+             ).alias(
+                 column + "_" + "viewport_northeast_latitude", 
+                 column + "_" + "viewport_northeast_longitude"
+             )
+         ).drop(column + "_" + "viewport_northeast")
+         .select(
+             "*", 
+             json_tuple(
+                 column + "_" + "viewport_southwest", 
+                 column + "_" + "lat", 
+                 column + "_" + "lng"
+             ).alias(
+                 column + "_" + "viewport_southwest_latitude", 
+                 column + "_" + "viewport_southwest_longitude")
+         ).drop(column + "_" + "viewport_southwest")
+         # bounds
+         .select(
+             "*", 
+             json_tuple(
+                 column + "_" + "bounds", 
+                 column + "_" + "northeast", 
+                 column + "_" + "southwest"
+             ).alias(
+                 column + "_" + "bounds_northeast", 
+                 column + "_" + "bounds_southwest"
+             )
+         ).drop(column + "_" + "bounds")
+         .select(
+             "*", 
+             json_tuple(
+                 column + "_" + "bounds_northeast", 
+                 column + "_" + "lat", 
+                 column + "_" + "lng"
+             ).alias(
+                 column + "_" + "bounds_northeast_latitude", 
+                 column + "_" + "bounds_northeast_longitude"
+             )
+         ).drop(column + "_" + "bounds_northeast")
+         .select(
+             "*", 
+             json_tuple(
+                 column + "_" + "bounds_southwest", 
+                 column + "_" + "lat", 
+                 column + "_" + "lng"
+             ).alias(
+                 column + "_" + "bounds_southwest_latitude", 
+                 column + "_" + "bounds_southwest_longitude"
+             )
+         ).drop(column + "_" + "bounds_southwest")
+         # types
+         .selectExpr(
+             "*", 
+             f"from_json({column + '_'}types, 'array<string>') as {column + '_'}types_array"
+         ).drop(f"{column + '_'}types")
+        )
+
+
+#         df_locations_clean = (df_locations_clean
+#          # types - continuation
+#          .select(
+#              "*", 
+#              *[col("types_array")[i] for i in range(df_locations_clean.select(max(size(col("types_array"))).alias("max_size")).first()["max_size"])]
+#          ).drop("types_array")
+#         )
+
+
+#         df_locations_clean = df_locations_clean.selectExpr(
+#             "*", 
+#             "from_json(address_components, 'array<struct<long_name:string,short_name:string,types:array<string>>>') as address_components_array"
+#         ).drop("address_components")
+
+
+#         df_locations_clean = df_locations_clean.select(
+#             "*", 
+#             *[col("address_components_array")[i] for i in range(df_locations_clean.select(max(size(col("address_components_array"))).alias("max_size")).first()["max_size"])]
+#         ).drop("address_components_array")
+
+
+#         df_locations_clean = df_locations_clean.select(
+#             "*", 
+#             *[col(column).long_name for column in df_locations_clean.columns if "address_components_array" in column], *[col(column).short_name for column in df_locations_clean.columns if                     "address_components_array" in column], *[col(column).types for column in df_locations_clean.columns if "address_components_array" in column]
+#         ).drop(
+#             *[column for column in df_locations_clean.columns if column.startswith("address_components_array[") == True and column.endswith("]") == True]
+#         )
+
+
+#         df_locations_clean = df_locations_clean.toDF(*(column.replace('.', '_') for column in df_locations_clean.columns))
+
+
+#         df_locations_clean = df_locations_clean.select(
+#             "*", 
+#             *[col(column)[i] for column in df_locations_clean.columns if column.endswith("types") == True for i in range(df_locations_clean.select(max(size(col(column))).alias(str(column) +                   "_max_size")).first()[str(column) + "_max_size"])]
+#         ).drop(
+#             *[column for column in df_locations_clean.columns if column.endswith("types") == True]
+#         )
+
+
+#         df_locations = df_locations.join(df_locations_clean, ["id"], how="inner").drop(column)
+# #         df_locations_clean.display()
+
+    
+# df_locations.display()
+
+        df_locations_clean.display()
+
+# COMMAND ----------
+
 # Unpack the location columns
 
 df_locations = (df_locations
  # Take locations 0
- .select("id", "locations_0_address", "locations_0_comment", "locations_0_founded", "locations_0_id", "locations_0_teamSize")
+ .select(
+     "id", 
+     "locations_0_address", 
+     "locations_0_comment", 
+     "locations_0_founded", 
+     "locations_0_id", 
+     "locations_0_teamSize"
+ )
  # locations_0_address
- .select("*", json_tuple("locations_0_address", "address_components", "formatted_address", "geometry", "place_id", "types").alias("address_components", "formatted_address", "geometry", "place_id", "types")).drop("locations_0_address") 
+ .select(
+     "*", 
+     json_tuple(
+         "locations_0_address", 
+         "address_components", 
+         "formatted_address", 
+         "geometry", 
+         "place_id", 
+         "types"
+     ).alias(
+         "address_components", 
+         "formatted_address", 
+         "geometry", 
+         "place_id", 
+         "types"
+     )
+ ).drop("locations_0_address") 
  # geometry
- .select("*", json_tuple("geometry", "bounds", "location", "location_type", "viewport").alias("bounds", "location", "location_type", "viewport")).drop("geometry")
+ .select(
+     "*", 
+     json_tuple(
+         "geometry", 
+         "bounds", 
+         "location", 
+         "location_type", 
+         "viewport"
+     ).alias(
+         "bounds", 
+         "location", 
+         "location_type", 
+         "viewport"
+     )
+ ).drop("geometry")
  # location
- .select("*", json_tuple("location", "lat", "lng").alias("latitude", "longitude")).drop("location")
+ .select(
+     "*", 
+     json_tuple(
+         "location", 
+         "lat", 
+         "lng"
+     ).alias(
+         "latitude", 
+         "longitude")
+ ).drop("location")
  # viewport
- .select("*", json_tuple("viewport", "northeast", "southwest").alias("viewport_northeast", "viewport_southwest")).drop("viewport")
- .select("*", json_tuple("viewport_northeast", "lat", "lng").alias("viewport_northeast_latitude", "viewport_northeast_longitude")).drop("viewport_northeast")
- .select("*", json_tuple("viewport_southwest", "lat", "lng").alias("viewport_southwest_latitude", "viewport_southwest_longitude")).drop("viewport_southwest")
+ .select(
+     "*", 
+     json_tuple(
+         "viewport", 
+         "northeast", 
+         "southwest"
+     ).alias(
+         "viewport_northeast", 
+         "viewport_southwest"
+     )
+ ).drop("viewport")
+ .select(
+     "*", 
+     json_tuple(
+         "viewport_northeast", 
+         "lat", 
+         "lng"
+     ).alias(
+         "viewport_northeast_latitude", 
+         "viewport_northeast_longitude"
+     )
+ ).drop("viewport_northeast")
+ .select(
+     "*", 
+     json_tuple(
+         "viewport_southwest", 
+         "lat", 
+         "lng"
+     ).alias(
+         "viewport_southwest_latitude", "viewport_southwest_longitude")).drop("viewport_southwest")
  # bounds
- .select("*", json_tuple("bounds", "northeast", "southwest").alias("bounds_northeast", "bounds_southwest")).drop("bounds")
- .select("*", json_tuple("bounds_northeast", "lat", "lng").alias("bounds_northeast_latitude", "bounds_northeast_longitude")).drop("bounds_northeast")
- .select("*", json_tuple("bounds_southwest", "lat", "lng").alias("bounds_southwest_latitude", "bounds_southwest_longitude")).drop("bounds_southwest")
- # types - can be removed
- .selectExpr("*", "from_json(types, 'array<string>') as types_array").drop("types")
+ .select(
+     "*", 
+     json_tuple(
+         "bounds", 
+         "northeast", 
+         "southwest"
+     ).alias(
+         "bounds_northeast", 
+         "bounds_southwest"
+     )
+ ).drop("bounds")
+ .select(
+     "*", 
+     json_tuple(
+         "bounds_northeast", 
+         "lat", 
+         "lng"
+     ).alias(
+         "bounds_northeast_latitude", 
+         "bounds_northeast_longitude"
+     )
+ ).drop("bounds_northeast")
+ .select(
+     "*", 
+     json_tuple(
+         "bounds_southwest", 
+         "lat", 
+         "lng"
+     ).alias(
+         "bounds_southwest_latitude", 
+         "bounds_southwest_longitude"
+     )
+ ).drop("bounds_southwest")
+ # types
+ .selectExpr(
+     "*", 
+     "from_json(types, 'array<string>') as types_array"
+ ).drop("types")
 )
-                
+ 
+    
 df_locations = (df_locations
  # types - continuation
- .select("*", *[col("types_array")[i] for i in range(df_locations.select(max(size(col("types_array"))).alias("max_size")).first()["max_size"])]).drop("types_array")
+ .select(
+     "*", 
+     *[col("types_array")[i] for i in range(df_locations.select(max(size(col("types_array"))).alias("max_size")).first()["max_size"])]
+ ).drop("types_array")
 )
+
+
+df_locations = df_locations.selectExpr(
+    "*", 
+    "from_json(address_components, 'array<struct<long_name:string,short_name:string,types:array<string>>>') as address_components_array"
+).drop("address_components")
+
+
+df_locations = df_locations.select(
+    "*", 
+    *[col("address_components_array")[i] for i in range(df_locations.select(max(size(col("address_components_array"))).alias("max_size")).first()["max_size"])]
+).drop("address_components_array")
+
+
+df_locations = df_locations.select(
+    "*", 
+    *[col(column).long_name for column in df_locations.columns if "address_components_array" in column], *[col(column).short_name for column in df_locations.columns if "address_components_array"       in column], *[col(column).types for column in df_locations.columns if "address_components_array" in column]
+).drop(
+    *[column for column in df_locations.columns if column.startswith("address_components_array[") == True and column.endswith("]") == True]
+)
+
+
+df_locations = df_locations.toDF(*(column.replace('.', '_') for column in df_locations.columns))
+
+
+df_locations = df_locations.select(
+    "*", 
+    *[col(column)[i] for column in df_locations.columns if column.endswith("types") == True for i in range(df_locations.select(max(size(col(column))).alias(str(column) + "_max_size")).first()         [str(column) + "_max_size"])]
+).drop(
+    *[column for column in df_locations.columns if column.endswith("types") == True]
+)
+
 
 df_locations.display()
 
 # COMMAND ----------
 
-.selectExpr(
-    "*", "from_json(types, 'array<string>')"
-)df_locations.selectExpr(
-    "*", "from_json(types, 'array<string>')"
-).display()
+# MAGIC %md
+# MAGIC ### Requirements
 
 # COMMAND ----------
 
@@ -351,6 +834,11 @@ df_requirements.display()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Responsibilities
+
+# COMMAND ----------
+
 # DBTITLE 1,Responsibilities
 # Dynamically unpack columns with Struct or Array data type
 
@@ -378,6 +866,11 @@ df_responsibilities.display()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Tools
+
+# COMMAND ----------
+
 # DBTITLE 1,Tools
 # Dynamically unpack columns with Struct or Array data type
 
@@ -400,10 +893,6 @@ for column in df_tools.columns:
     
 
 df_tools.display()
-
-# COMMAND ----------
-
-df.display()
 
 # COMMAND ----------
 
