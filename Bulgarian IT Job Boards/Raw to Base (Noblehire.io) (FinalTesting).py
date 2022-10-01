@@ -382,7 +382,7 @@ for column in df_companies.columns:
               "*", 
               f"from_json(types, 'array<string>') as types_array"
           ).drop("types")
-        )
+        ).cache()
 
         #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -423,7 +423,8 @@ for column in df_companies.columns:
         #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
         # rename columns to remove any dots in column names caused by the selection of nested objects
-        df_companies_clean = df_companies_clean.toDF(*(c.replace('.', '_') for c in df_companies_clean.columns))
+        df_companies_clean = df_companies_clean.toDF(*(c.replace('.', '_') for c in df_companies_clean.columns)).cache()
+#         df_companies_clean = df_companies_clean.select([col(c).alias(c.replace(".", "_")) for c in df_companies_clean.columns])
 
         #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -438,7 +439,8 @@ for column in df_companies.columns:
         #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
         # rename columns to remove any dots in column names caused by the selection of nested objects
-        df_companies_clean = df_companies_clean.toDF(*[column + "_" + c if c != "id" else "id" for c in df_companies_clean.columns])
+#         df_companies_clean = df_companies_clean.toDF(*[column + "_" + c if c != "id" else "id" for c in df_companies_clean.columns])
+        df_companies_clean = df_companies_clean.select([col(c).alias(column + "_" + c) if c != "id" else "id" for c in df_companies_clean.columns])
 
         #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1145,4 +1147,5 @@ for column in df_tools.columns:
 df_tools.display()
 
 # COMMAND ----------
+
 
