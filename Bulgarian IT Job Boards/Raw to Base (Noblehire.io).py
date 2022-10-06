@@ -985,4 +985,8 @@ dbutils.fs.rm(temp_path, True)
 
 # COMMAND ----------
 
+# DBTITLE 1,Check for any unexpected columns
+# Once all transformations are completed, only two columns are expected in the Raw DataFrame - id and companyId.
+# If the number of columns left in the Raw DataFrame is different than 2 then this could mean that there are new column/columns in the source data.
+
 validateRawDataFrame(df, 2)
