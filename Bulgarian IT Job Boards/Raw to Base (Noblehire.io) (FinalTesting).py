@@ -197,7 +197,7 @@ df_companies = df.select("company").distinct()
 df_companies = (df_companies
   .select(
       col("company.brand"), 
-      col("company.id"), 
+      col("company.id").alias("companyId"), 
       col("company.overview"), 
       col("company.product"), 
       col("company.public"), 
@@ -266,6 +266,10 @@ df_companies = (df_companies
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "image" in c or "icon" in c])
 
 
+# Drop the column from the Raw DataFrame
+df = df.drop("company")
+
+
 df_companies.display()
 
 # COMMAND ----------
@@ -276,7 +280,7 @@ df_companies.display()
 # COMMAND ----------
 
 # DBTITLE 1,Company Awards
-df_company_awards = df_companies.select([c for c in df_companies.columns if "awards" in c or "id" in c.lower()])
+df_company_awards = df_companies.select([c for c in df_companies.columns if "awards" in c or c == "companyId"])
 
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "awards" in c])
@@ -294,7 +298,7 @@ df_company_awards.display()
 # COMMAND ----------
 
 # DBTITLE 1,Company Perks
-df_company_perks = df_companies.select([c for c in df_companies.columns if "perks" in c or "id" in c.lower()])
+df_company_perks = df_companies.select([c for c in df_companies.columns if "perks" in c or c == "companyId"])
 
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "perks" in c])
@@ -312,7 +316,7 @@ df_company_perks.display()
 # COMMAND ----------
 
 # DBTITLE 1,Company Values
-df_company_values = df_companies.select([c for c in df_companies.columns if "values" in c or "id" in c.lower()])
+df_company_values = df_companies.select([c for c in df_companies.columns if "values" in c or c == "companyId"])
 
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "values" in c])
@@ -337,7 +341,7 @@ for column in df_companies.columns:
         df_companies_clean = (df_companies
           # Take location_<n>_address column
           .select(
-              "id", 
+              "companyId", 
               column
           )
           # locations_<n>_address
@@ -515,7 +519,7 @@ for column in df_companies.columns:
         
         # rename columns to remove any dots in column names caused by the selection of nested objects
 #         df_companies_clean = df_companies_clean.toDF(*[column + "_" + c if c != "id" else "id" for c in df_companies_clean.columns])
-        df_companies_clean = df_companies_clean.select([col(c).alias(column + "_" + c) if c != "id" else "id" for c in df_companies_clean.columns])
+        df_companies_clean = df_companies_clean.select([col(c).alias(column + "_" + c) if c != "companyId" else "companyId" for c in df_companies_clean.columns])
 
         #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
@@ -524,7 +528,7 @@ for column in df_companies.columns:
         df_companies_clean = spark.read.format("parquet").load(f"{temp_path}CompanyLocationsAddress/{column.replace('[', '_').replace(']', '')}/")
 
         # join clean DataFrame back to the original DataFrame and drop the unpacked column
-        df_companies = df_companies.join(df_companies_clean, ["id"], how="inner").drop(column)
+        df_companies = df_companies.join(df_companies_clean, ["companyId"], how="inner").drop(column)
         
 #         df_companies_clean.display()
 
@@ -805,177 +809,58 @@ df_locations.display()
 
 # COMMAND ----------
 
-# # Unpack the location columns
+# MAGIC %md
+# MAGIC ### Posts
 
-# df_locations = (df_locations
-#  # Take locations 0
-#  .select(
-#      "id", 
-#      "locations_0_address", 
-#      "locations_0_comment", 
-#      "locations_0_founded", 
-#      "locations_0_id", 
-#      "locations_0_teamSize"
-#  )
-#  # locations_0_address
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "locations_0_address", 
-#          "address_components", 
-#          "formatted_address", 
-#          "geometry", 
-#          "place_id", 
-#          "types"
-#      ).alias(
-#          "address_components", 
-#          "formatted_address", 
-#          "geometry", 
-#          "place_id", 
-#          "types"
-#      )
-#  ).drop("locations_0_address") 
-#  # geometry
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "geometry", 
-#          "bounds", 
-#          "location", 
-#          "location_type", 
-#          "viewport"
-#      ).alias(
-#          "bounds", 
-#          "location", 
-#          "location_type", 
-#          "viewport"
-#      )
-#  ).drop("geometry")
-#  # location
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "location", 
-#          "lat", 
-#          "lng"
-#      ).alias(
-#          "latitude", 
-#          "longitude")
-#  ).drop("location")
-#  # viewport
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "viewport", 
-#          "northeast", 
-#          "southwest"
-#      ).alias(
-#          "viewport_northeast", 
-#          "viewport_southwest"
-#      )
-#  ).drop("viewport")
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "viewport_northeast", 
-#          "lat", 
-#          "lng"
-#      ).alias(
-#          "viewport_northeast_latitude", 
-#          "viewport_northeast_longitude"
-#      )
-#  ).drop("viewport_northeast")
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "viewport_southwest", 
-#          "lat", 
-#          "lng"
-#      ).alias(
-#          "viewport_southwest_latitude", "viewport_southwest_longitude")).drop("viewport_southwest")
-#  # bounds
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "bounds", 
-#          "northeast", 
-#          "southwest"
-#      ).alias(
-#          "bounds_northeast", 
-#          "bounds_southwest"
-#      )
-#  ).drop("bounds")
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "bounds_northeast", 
-#          "lat", 
-#          "lng"
-#      ).alias(
-#          "bounds_northeast_latitude", 
-#          "bounds_northeast_longitude"
-#      )
-#  ).drop("bounds_northeast")
-#  .select(
-#      "*", 
-#      json_tuple(
-#          "bounds_southwest", 
-#          "lat", 
-#          "lng"
-#      ).alias(
-#          "bounds_southwest_latitude", 
-#          "bounds_southwest_longitude"
-#      )
-#  ).drop("bounds_southwest")
-#  # types
-#  .selectExpr(
-#      "*", 
-#      "from_json(types, 'array<string>') as types_array"
-#  ).drop("types")
-# )
- 
-    
-# df_locations = (df_locations
-#  # types - continuation
-#  .select(
-#      "*", 
-#      *[col("types_array")[i] for i in range(df_locations.select(max(size(col("types_array"))).alias("max_size")).first()["max_size"])]
-#  ).drop("types_array")
-# )
+# COMMAND ----------
+
+# DBTITLE 1,Posts
+df_posts = (df
+  .select(
+      "id", 
+      "companyId", 
+      "businessTravelComment", 
+      "businessTraveling", 
+      "customerFacing", 
+      regexp_replace(regexp_replace(regexp_replace("description", r'<[^<>]*>', ""), "&nbsp;", ""), "&amp;", "").alias("description"),
+      "fullyRemote", 
+      "homeOfficeDays", 
+      "homeOfficePer", 
+      "jobType", 
+      "jobTypeComment", 
+      "mainDatabase", 
+      "offeringStock", 
+      "postedAt", 
+      "primaryLanguage", 
+      "primaryPlatform", 
+      regexp_replace(regexp_replace(regexp_replace("productDescription", r'<[^<>]*>', ""), "&nbsp;", ""), "&amp;", "").alias("productDescription"), 
+      "public", 
+      "role", 
+      "salaryCurrency", 
+      "salaryMax", 
+      "salaryMin", 
+      "salaryPeriod", 
+      "secondaryLanguage", 
+      "secondaryPlatform", 
+      "seniority", 
+      "slug", 
+      "teamLead", 
+      "teamLeadName", 
+      "teamLeadRole", 
+      "teamSizeMax", 
+      "teamSizeMin", 
+      "title")
+)
+
+# Drop the column from the Raw DataFrame
+df = df.drop(*[c for c in df_posts.columns if c != "id" and c != "companyId"], "ProductImages", "teamLeadImage")
 
 
-# df_locations = df_locations.selectExpr(
-#     "*", 
-#     "from_json(address_components, 'array<struct<long_name:string,short_name:string,types:array<string>>>') as address_components_array"
-# ).drop("address_components")
+# Write to ADLS
+df_posts.write.format("parquet").mode("overwrite").save(f"{main_path}{posts_path}")
 
 
-# df_locations = df_locations.select(
-#     "*", 
-#     *[col("address_components_array")[i] for i in range(df_locations.select(max(size(col("address_components_array"))).alias("max_size")).first()["max_size"])]
-# ).drop("address_components_array")
-
-
-# df_locations = df_locations.select(
-#     "*", 
-#     *[col(column).long_name for column in df_locations.columns if "address_components_array" in column], *[col(column).short_name for column in df_locations.columns if "address_components_array"       in column], *[col(column).types for column in df_locations.columns if "address_components_array" in column]
-# ).drop(
-#     *[column for column in df_locations.columns if column.startswith("address_components_array[") == True and column.endswith("]") == True]
-# )
-
-
-# df_locations = df_locations.toDF(*(column.replace('.', '_') for column in df_locations.columns))
-
-
-# df_locations = df_locations.select(
-#     "*", 
-#     *[col(column)[i] for column in df_locations.columns if column.endswith("types") == True for i in range(df_locations.select(max(size(col(column))).alias(str(column) + "_max_size")).first()         [str(column) + "_max_size"])]
-# ).drop(
-#     *[column for column in df_locations.columns if column.endswith("types") == True]
-# )
-
-
-# df_locations.display()
+df_posts.display()
 
 # COMMAND ----------
 
@@ -1083,3 +968,12 @@ df_tools.write.format("parquet").mode("overwrite").save(f"{main_path}{job_tools_
     
     
 df_tools.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Delete temp files
+dbutils.fs.rm(temp_path, True)
+
+# COMMAND ----------
+
+df.display()
