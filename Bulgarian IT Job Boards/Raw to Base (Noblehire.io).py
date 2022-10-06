@@ -295,7 +295,7 @@ df_company_awards = df_companies.select([c for c in df_companies.columns if "awa
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "awards" in c])
 
 # Write to ADLS
-df_benefits.write.format("parquet").mode("overwrite").save(f"{main_path}{company_awards_path}")
+df_company_awards.write.format("parquet").mode("overwrite").save(f"{main_path}{company_awards_path}")
 
 df_company_awards.display()
 
@@ -313,7 +313,7 @@ df_company_perks = df_companies.select([c for c in df_companies.columns if "perk
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "perks" in c])
 
 # Write to ADLS
-df_benefits.write.format("parquet").mode("overwrite").save(f"{main_path}{company_perks_path}")
+df_company_perks.write.format("parquet").mode("overwrite").save(f"{main_path}{company_perks_path}")
 
 df_company_perks.display()
 
@@ -331,7 +331,7 @@ df_company_values = df_companies.select([c for c in df_companies.columns if "val
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "values" in c])
 
 # Write to ADLS
-df_benefits.write.format("parquet").mode("overwrite").save(f"{main_path}{company_values_path}")
+df_company_values.write.format("parquet").mode("overwrite").save(f"{main_path}{company_values_path}")
 
 df_company_values.display()
 
@@ -984,5 +984,9 @@ df_tools.display()
 dbutils.fs.rm(temp_path, True)
 
 # COMMAND ----------
+
+# DBTITLE 1,Check for any unexpected columns
+# Once all transformations are completed, only two columns are expected in the Raw DataFrame - id and companyId.
+# If the number of columns left in the Raw DataFrame is different than 2 then this could mean that there are new column/columns in the source data.
 
 validateRawDataFrame(df, 2)
