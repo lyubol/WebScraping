@@ -124,6 +124,7 @@ df.display()
 df = (df
   .withColumn("Source", lit("Noblehire.io"))
   .withColumn("IngestionDate", current_date())
+  .withColumn("postedAt_Timestamp", concat_ws(".",from_unixtime((col("postedAt")/1000),"yyyy-MM-dd HH:mm:ss"),substring(col("postedAt"),-3,3)))
 )
 
 df.display()
@@ -145,7 +146,7 @@ results={}
 for i in activities_max_size:
   results.update(i.asDict())
 
-df_activities = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), *[col("activities")[i] for i in range(results["max(size(activities))"])])
+df_activities = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("activities")[i] for i in range(results["max(size(activities))"])])
 
 # Drop the column from the Raw DataFrame
 df = df.drop("activities")
@@ -182,7 +183,7 @@ results={}
 for i in benefits_max_size:
   results.update(i.asDict())
 
-df_benefits = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), *[col("benefits")[i] for i in range(results["max(size(benefits))"])])
+df_benefits = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("benefits")[i] for i in range(results["max(size(benefits))"])])
 
 # Drop the column from the Raw DataFrame
 df = df.drop("benefits")
@@ -210,7 +211,7 @@ df_benefits.display()
 # COMMAND ----------
 
 # DBTITLE 1,Company
-df_companies = df.select("Source", "IngestionDate", "company").distinct()
+df_companies = df.select("Source", "IngestionDate", "postedAt_Timestamp", "company").distinct()
 
 
 df_companies = (df_companies
@@ -219,6 +220,7 @@ df_companies = (df_companies
       col("company.id").alias("companyId"),
       col("Source"),
       col("IngestionDate"),
+      col("postedAt_Timestamp"), 
       col("company.overview"), 
       col("company.product"), 
       col("company.public"), 
@@ -301,7 +303,7 @@ df_companies.display()
 # COMMAND ----------
 
 # DBTITLE 1,Company Awards
-df_company_awards = df_companies.select(*[c for c in df_companies.columns if "awards" in c or c == "companyId"], col("Source"), col("IngestionDate"))
+df_company_awards = df_companies.select(*[c for c in df_companies.columns if "awards" in c or c == "companyId"], col("Source"), col("IngestionDate"), col("postedAt_Timestamp"))
 
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "awards" in c])
@@ -319,7 +321,7 @@ df_company_awards.display()
 # COMMAND ----------
 
 # DBTITLE 1,Company Perks
-df_company_perks = df_companies.select(*[c for c in df_companies.columns if "perks" in c or c == "companyId"], col("Source"), col("IngestionDate"))
+df_company_perks = df_companies.select(*[c for c in df_companies.columns if "perks" in c or c == "companyId"], col("Source"), col("IngestionDate"), col("postedAt_Timestamp"))
 
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "perks" in c])
@@ -337,7 +339,7 @@ df_company_perks.display()
 # COMMAND ----------
 
 # DBTITLE 1,Company Values
-df_company_values = df_companies.select(*[c for c in df_companies.columns if "values" in c or c == "companyId"], col("Source"), col("IngestionDate"))
+df_company_values = df_companies.select(*[c for c in df_companies.columns if "values" in c or c == "companyId"], col("Source"), col("IngestionDate"), col("postedAt_Timestamp"))
 
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "values" in c])
@@ -577,7 +579,7 @@ results={}
 for i in hiringprocesssteps_max_size:
   results.update(i.asDict())
 
-df_hiringprocesssteps = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), *[col("hiringProcessSteps")[i] for i in range(results["max(size(hiringProcessSteps))"])])
+df_hiringprocesssteps = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("hiringProcessSteps")[i] for i in range(results["max(size(hiringProcessSteps))"])])
 
 # Drop the column from the Raw DataFrame
 df = df.drop("hiringProcessSteps")
@@ -612,7 +614,7 @@ results={}
 for i in locations_max_size:
   results.update(i.asDict())
 
-df_locations = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), *[col("locations")[i] for i in range(results["max(size(locations))"])])
+df_locations = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("locations")[i] for i in range(results["max(size(locations))"])])
 
 # Drop the column from the Raw DataFrame
 df = df.drop("locations")
@@ -842,6 +844,7 @@ df_posts = (df
       "companyId", 
       "Source",
       "IngestionDate",
+      "postedAt_Timestamp", 
       "businessTravelComment", 
       "businessTraveling", 
       "customerFacing", 
@@ -876,7 +879,7 @@ df_posts = (df
 )
 
 # Drop the column from the Raw DataFrame
-df = df.drop(*[c for c in df_posts.columns if c not in ["id", "companyId", "Source", "IngestionDate"]], "ProductImages", "teamLeadImage")
+df = df.drop(*[c for c in df_posts.columns if c not in ["id", "companyId", "Source", "IngestionDate", "postedAt_Timestamp"]], "ProductImages", "teamLeadImage")
 
 
 # Write to ADLS
@@ -902,7 +905,7 @@ results={}
 for i in requirements_max_size:
   results.update(i.asDict())
 
-df_requirements = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), *[col("requirements")[i] for i in range(results["max(size(requirements))"])])
+df_requirements = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("requirements")[i] for i in range(results["max(size(requirements))"])])
 
 # Drop the column from the Raw DataFrame
 df = df.drop("requirements")
@@ -939,7 +942,7 @@ results={}
 for i in responsibilities_max_size:
   results.update(i.asDict())
 
-df_responsibilities = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), *[col("responsibilities")[i] for i in range(results["max(size(responsibilities))"])])
+df_responsibilities = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("responsibilities")[i] for i in range(results["max(size(responsibilities))"])])
 
 # Drop the column from the Raw DataFrame
 df = df.drop("responsibilities")
@@ -975,7 +978,7 @@ results={}
 for i in tools_max_size:
   results.update(i.asDict())
 
-df_tools = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), *[col("tools")[i] for i in range(results["max(size(tools))"])])
+df_tools = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("tools")[i] for i in range(results["max(size(tools))"])])
 
 df = df.drop("tools")
 
@@ -1003,4 +1006,4 @@ dbutils.fs.rm(temp_path, True)
 # Once all transformations are completed, only two columns are expected in the Raw DataFrame - id and companyId.
 # If the number of columns left in the Raw DataFrame is different than 2 then this could mean that there are new column/columns in the source data.
 
-validateRawDataFrame(df, 4)
+validateRawDataFrame(df, 5)
