@@ -13,13 +13,17 @@ from pyspark.sql.functions import *
 # COMMAND ----------
 
 # DBTITLE 1,Define variables
+# Date variables 
+current_year = date.today().year
+current_month = "0" + str(date.today().month) if len(str(date.today().month)) == 1 else date.today().month
+current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 else date.today().day
+
 # Raw location variables
 location_prefix = "/dbfs"
 main_path = "/mnt/adlslirkov/it-job-boards/Noblehire.io/raw/"
-posts_path = f"posts/{date.today().year}/{date.today().month}/{date.today().day}/"
-posts_file_name = f"noblehireio-posts-{date.today()}.csv"
+posts_path = f"posts/{current_year}/{current_month}/{current_day}/"
 
-print(f"Posts path: {posts_path}; Posts file name: {posts_file_name}")
+print(f"Posts path: {main_path}{posts_path}; Posts file name: {posts_file_name}")
 
 # COMMAND ----------
 
@@ -42,6 +46,8 @@ while len(posts.getPosts(page)) != 0:
 
 # COMMAND ----------
 
+# This works!
+
 posts = scrape_Noblehire()
 
 page = 0
@@ -52,7 +58,7 @@ while len(posts.getPosts(page)) != 0:
     posts_response = json.dumps(posts_response)
     
     if len(posts_response) > 0:
-        with open(f"/dbfs/mnt/adlslirkov/it-job-boards/testing/JSON/{page}.json", "w") as f:
+        with open(f"/dbfs/mnt/adlslirkov/it-job-boards/testing/JSON_08102022/{page}.json", "w") as f:
             f.write(posts_response)
             f.close()
     
@@ -101,11 +107,28 @@ df_activities = df.select([col("activities")[i] for i in range(results["max(size
 #     cols.append(f"col('{column}').timePercents.alias('{column}_timePercents')")
 #     cols.append(f"col('{column}').title.alias('{column}_title')")
     
-df_activities.select("activities[0].timePercents").display()
+# df_activities.select("activities[0].timePercents").display()
 
 # COMMAND ----------
 
-activities[0]df_activitiesdf_activities.select(col('activities[0]').timePercents.alias('activities[0]_timePercents'), col('activities[0]').title.alias('activities[0]_title')).display()
+import pyspark.sql.functions as F
+
+def flatten_df(nested_df):
+    flat_cols = [c[0] for c in nested_df.dtypes if c[1][:6] != 'struct']
+    nested_cols = [c[0] for c in nested_df.dtypes if c[1][:6] == 'struct']
+
+    flat_df = nested_df.select(flat_cols +
+                               [col(nc+'.'+c).alias(nc+'_'+c)
+                                for nc in nested_cols
+                                for c in nested_df.select(nc+'.*').columns])
+    return flat_df
+
+flat_df = flatten_df(df_activities)
+flat_df.display()
+
+# COMMAND ----------
+
+df_activities.select(col('activities[0]').timePercents.alias('activities[0]_timePercents'), col('activities[0]').title.alias('activities[0]_title')).display()
 
 # COMMAND ----------
 
