@@ -357,7 +357,7 @@ df_company_values.display()
 
 # DBTITLE 1,Company General - Define functions
 # Both of the functions within this command (locationsAddressInitialTransformations, locationsAddressAdditionalTransformations) are containing series of transformations, which are unpacking/flattening company_locations_address columns. 
-# Since the number of company_locations_address columns might vary, we can't hard code the transformation logic for specific columns, hence we need functions that will work, no matter how many of these columns we have. 
+# Since the number of company_locations_address columns might vary, we can't hard code the transformation logic for specific columns, hence we need functions that will work, no matter how many of these columns we have.
 # All company_locations_address columns are following the same structure.
 
 def locationsAddressInitialTransformations(df_companies):
@@ -574,6 +574,11 @@ for each in dbutils.fs.ls(f"{temp_path}CompanyLocationsAddress/"):
     df_companies = df_companies.join(df_companies_clean, ["companyId"], how="inner").drop(column)
     
 df_companies.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Company General - Write to BASE
+df_companies.write.format("parquet").mode("overwrite").save(f"{main_path}{company_general_path}")
 
 # COMMAND ----------
 
