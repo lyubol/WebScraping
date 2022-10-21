@@ -256,6 +256,7 @@ deltaCompanyAwards.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Delta Table Instance
 from delta.tables import *
 
 deltaCompanyAwards = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_awards")
@@ -265,10 +266,16 @@ targetDF.display()
 
 # COMMAND ----------
 
-sourceDF = df_company_awards
+# DBTITLE 1,Read Update Data
+sourceDF = df_company_awards.select(*[col for col in sourceDF.columns if col != "IngestionDate"])
 sourceDF.display()
 
 # COMMAND ----------
+
+# DBTITLE 1,Join source and target
+# Rename columns in targetDF, so that we don't need to manually alias them in the join below.
+# Since this code will be used for DataFrames with different number of columns and column names, this is the approach that we need to take.
+# targetDF = targetDF.toDF(*["target_" + column for column in targetDF.columns])
 
 joinDF = (
     sourceDF
@@ -280,21 +287,17 @@ joinDF = (
     )
     .select(
         sourceDF["*"],
-        targetDF.companyId,
-        targetDF.company_awards_title_0,
-        targetDF.company_awards_title_1,
-        targetDF.company_awards_title_2,
-        targetDF.company_awards_title_3,
-        targetDF.company_awards_title_4,
-        targetDF.company_awards_title_5,
-        targetDF.company_awards_title_6,
-        targetDF.company_awards_title_7,
-        targetDF.company_awards_title_8,
-        targetDF.Source,
-        targetDF.IngestionDate,
-        targetDF.IsActive,
-        targetDF.StartDate,
-        targetDF.EndDate
+        targetDF.companyId.alias("target_companyId"),
+        targetDF.company_awards_title_0.alias("target_company_awards_title_0"),
+        targetDF.company_awards_title_1.alias("target_company_awards_title_1"),
+        targetDF.company_awards_title_2.alias("target_company_awards_title_2"),
+        targetDF.company_awards_title_3.alias("target_company_awards_title_3"),
+        targetDF.company_awards_title_4.alias("target_company_awards_title_4"),
+        targetDF.company_awards_title_5.alias("target_company_awards_title_5"),
+        targetDF.company_awards_title_6.alias("target_company_awards_title_6"),
+        targetDF.company_awards_title_7.alias("target_company_awards_title_7"),
+        targetDF.company_awards_title_8.alias("target_company_awards_title_8"),
+        targetDF.Source.alias("target_Source")
     )
 )
 
@@ -302,59 +305,83 @@ joinDF.display()
 
 # COMMAND ----------
 
-df_company_awardsdf_company_awards_updates = (df_company_awards
-     .withColumn("MergeKey", lit(None))
-     .join(deltaCompanyAwards, "companyId", "fullouter")
-     .filter(
-        (deltaCompanyAwards.IsActive == "True") 
-        & (deltaCompanyAwards.company_awards_title_0 != df_company_awards.company_awards_title_0)
-        | (deltaCompanyAwards.company_awards_title_1 != df_company_awards.company_awards_title_1)
-        | (deltaCompanyAwards.company_awards_title_2 != df_company_awards.company_awards_title_2)
-        | (deltaCompanyAwards.company_awards_title_3 != df_company_awards.company_awards_title_3)
-        | (deltaCompanyAwards.company_awards_title_4 != df_company_awards.company_awards_title_4)
-        | (deltaCompanyAwards.company_awards_title_5 != df_company_awards.company_awards_title_5)
-        | (deltaCompanyAwards.company_awards_title_6 != df_company_awards.company_awards_title_6)
-        | (deltaCompanyAwards.company_awards_title_7 != df_company_awards.company_awards_title_7)
-        | (deltaCompanyAwards.company_awards_title_8 != df_company_awards.company_awards_title_8)
-     )
-)
+# DBTITLE 1,Keep only records with changes
+# df_company_awards_updates = (df_company_awards
+#      .withColumn("MergeKey", lit(None))
+#      .join(targetDF, "companyId", "fullouter")
+#      .filter(
+#         (targetDF.IsActive == "True") 
+#         & (targetDF.company_awards_title_0 != df_company_awards.company_awards_title_0)
+#         | (targetDF.company_awards_title_1 != df_company_awards.company_awards_title_1)
+#         | (targetDF.company_awards_title_2 != df_company_awards.company_awards_title_2)
+#         | (targetDF.company_awards_title_3 != df_company_awards.company_awards_title_3)
+#         | (targetDF.company_awards_title_4 != df_company_awards.company_awards_title_4)
+#         | (targetDF.company_awards_title_5 != df_company_awards.company_awards_title_5)
+#         | (targetDF.company_awards_title_6 != df_company_awards.company_awards_title_6)
+#         | (targetDF.company_awards_title_7 != df_company_awards.company_awards_title_7)
+#         | (targetDF.company_awards_title_8 != df_company_awards.company_awards_title_8)
+#      )
+# )
+
+# df_company_awards_updates = (
+#     df_company_awards
+#      .withColumn("MergeKey", lit(None))
+#      .join(targetDF, "companyId", "fullouter")
+# )
 
 # COMMAND ----------
 
-(deltaCompanyAwards.alias("companyAwards")
+# DBTITLE 1,Hash source and target columns and compare them
+filterDF = joinDF.filter(xxhash64(*[col for col in joinDF.columns if col.startswith("target") == False]) != xxhash64(*[col for col in joinDF.columns if col.startswith("target") == True]))
+
+filterDF.display()
+
+# COMMAND ----------
+
+# dummyDF = filterDF.filter(col("target_companyId").isNotNull()).withColumn("MergeKey", lit(None))
+
+# dummyDF.display()
+
+# COMMAND ----------
+
+(deltaCompanyAwards.alias("target")
  .merge(
-     df_company_awards_updates.alias("updates"),
-     "companyAwards.companyId = updates.MergeKey"
+     filterDF.alias("source"),
+     "target.companyId = source.target_companyId"
  )
  .whenMatchedUpdate(set = 
     {
-        "Source": "updates.Source",
-        "IngestionDate": "updates.IngestionDate",
-        "IsActive": lit(False), 
-        "EndDate": current_timestamp()
+        "Source": "source.Source",
+        "IngestionDate": "'None'",
+        "IsActive": "'False'", 
+        "EndDate": "current_date"
     }
  )
  .whenNotMatchedInsert(values =
      {
-        "companyId": "updates.companyId",
-        "company_awards_title_0": "updates.company_awards_title_0",
-        "company_awards_title_1": "updates.company_awards_title_1",
-        "company_awards_title_2": "updates.company_awards_title_2",
-        "company_awards_title_3": "updates.company_awards_title_3",
-        "company_awards_title_4": "updates.company_awards_title_4",
-        "company_awards_title_5": "updates.company_awards_title_5",
-        "company_awards_title_6": "updates.company_awards_title_6",
-        "company_awards_title_7": "updates.company_awards_title_7",
-        "company_awards_title_8": "updates.company_awards_title_8",
-        "Source": "updates.Source",
-        "IngestionDate": "updates.IngestionDate",
-        "IsActive": "updates.IsActive",
-        "StartDate": "updates.StartDate",
-        "EndDate": "updates.EndDate"
+        "companyId": "source.companyId",
+        "company_awards_title_0": "source.company_awards_title_0",
+        "company_awards_title_1": "source.company_awards_title_1",
+        "company_awards_title_2": "source.company_awards_title_2",
+        "company_awards_title_3": "source.company_awards_title_3",
+        "company_awards_title_4": "source.company_awards_title_4",
+        "company_awards_title_5": "source.company_awards_title_5",
+        "company_awards_title_6": "source.company_awards_title_6",
+        "company_awards_title_7": "source.company_awards_title_7",
+        "company_awards_title_8": "source.company_awards_title_8",
+        "Source": "source.Source",
+        "IngestionDate": "'None'",
+        "IsActive": "'True'",
+        "StartDate": "current_date",
+        "EndDate": """to_date('9999-12-31', 'yyyy-MM-dd')"""
      }
  )
  .execute()
 )
+
+# COMMAND ----------
+
+deltaCompanyAwards.history().display()
 
 # COMMAND ----------
 
