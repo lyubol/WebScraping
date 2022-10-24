@@ -9,6 +9,7 @@ from datetime import date
 import time
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
+from delta.tables import *
 
 # COMMAND ----------
 
@@ -117,8 +118,8 @@ df_company_awards.write.format("delta").saveAsTable("jobposts_noblehire.company_
 
 # MAGIC %sql
 # MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.company_awards
-# MAGIC WHERE companyId = 13
+# MAGIC -- DELETE FROM jobposts_noblehire.company_awards
+# MAGIC -- WHERE companyId = 13
 # MAGIC 
 # MAGIC -- UPDATE jobposts_noblehire.company_awards
 # MAGIC -- SET company_awards_title_0 = 'UPDATED total funding'
@@ -257,8 +258,6 @@ deltaCompanyAwards.display()
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table Instance
-from delta.tables import *
-
 deltaCompanyAwards = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_awards")
 
 targetDF = deltaCompanyAwards.toDF()
@@ -267,7 +266,8 @@ targetDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Read Update Data
-sourceDF = df_company_awards.select(*[col for col in sourceDF.columns if col != "IngestionDate"])
+# sourceDF = df_company_awards.select(*[col for col in df_company_awards.columns if col != "IngestionDate"])
+sourceDF = df_company_awards
 sourceDF.display()
 
 # COMMAND ----------
@@ -277,12 +277,15 @@ sourceDF.display()
 # Since this code will be used for DataFrames with different number of columns and column names, this is the approach that we need to take.
 # targetDF = targetDF.toDF(*["target_" + column for column in targetDF.columns])
 
+targetDF = targetDF.filter(col("IsActive") == True).select(*[col for col in targetDF.columns if col not in ["IsActive", "StartDate", "EndDate"]])
+
+
 joinDF = (
     sourceDF
     .join(
         targetDF, 
-        (sourceDF.companyId == targetDF.companyId) 
-        & (targetDF.IsActive == "true"),
+        (sourceDF.companyId == targetDF.companyId),
+#         & (targetDF.IsActive == "true"),
         "leftouter"
     )
     .select(
@@ -297,7 +300,8 @@ joinDF = (
         targetDF.company_awards_title_6.alias("target_company_awards_title_6"),
         targetDF.company_awards_title_7.alias("target_company_awards_title_7"),
         targetDF.company_awards_title_8.alias("target_company_awards_title_8"),
-        targetDF.Source.alias("target_Source")
+        targetDF.Source.alias("target_Source"),
+        targetDF.IngestionDate.alias("target_IngestionDate")
     )
 )
 
@@ -332,29 +336,38 @@ joinDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Hash source and target columns and compare them
-filterDF = joinDF.filter(xxhash64(*[col for col in joinDF.columns if col.startswith("target") == False]) != xxhash64(*[col for col in joinDF.columns if col.startswith("target") == True]))
+filterDF = joinDF.filter(xxhash64(*[col for col in joinDF.columns if col.startswith("target") == False and "IngestionDate" not in col]) != xxhash64(*[col for col in joinDF.columns if col.startswith("target") == True and "IngestionDate" not in col])).withColumn("MergeKey", col("target_companyId"))
 
 filterDF.display()
 
 # COMMAND ----------
 
-# dummyDF = filterDF.filter(col("target_companyId").isNotNull()).withColumn("MergeKey", lit(None))
+# DBTITLE 1,Add MergeKey and set it to null where Id is not null
+dummyDF = filterDF.filter(col("target_companyId").isNotNull()).withColumn("MergeKey", lit(None))
 
-# dummyDF.display()
+dummyDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Union DFs
+scdDF = filterDF.union(dummyDF)
+
+scdDF.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Merge
 (deltaCompanyAwards.alias("target")
  .merge(
-     filterDF.alias("source"),
-     "target.companyId = source.target_companyId"
+     scdDF.alias("source"),
+     "target.companyId = source.MergeKey"
  )
  .whenMatchedUpdate(set = 
     {
         "Source": "source.Source",
-        "IngestionDate": "'None'",
+#         "IngestionDate": "'None'",
         "IsActive": "'False'", 
-        "EndDate": "current_date"
+        "EndDate": "current_timestamp"
     }
  )
  .whenNotMatchedInsert(values =
@@ -370,10 +383,10 @@ filterDF.display()
         "company_awards_title_7": "source.company_awards_title_7",
         "company_awards_title_8": "source.company_awards_title_8",
         "Source": "source.Source",
-        "IngestionDate": "'None'",
+        "IngestionDate": "source.IngestionDate",
         "IsActive": "'True'",
-        "StartDate": "current_date",
-        "EndDate": """to_date('9999-12-31', 'yyyy-MM-dd')"""
+        "StartDate": "current_timestamp",
+        "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss.SSSS')"""
      }
  )
  .execute()
