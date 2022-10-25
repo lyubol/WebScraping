@@ -83,8 +83,8 @@ from pyspark.sql.functions import *
 df_company_awards = (
     df_company_awards
     .withColumn("IsActive", lit(True))
-    .withColumn("StartDate", current_timestamp())
-    .withColumn("EndDate", lit("9999-12-31T00:00:00.000+0000"))
+    .withColumn("StartDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
+    .withColumn("EndDate", date_format(lit("9999-12-31 00:00:00"), "yyyy-MM-dd HH:mm:ss"))
 )
 
 # COMMAND ----------
@@ -371,26 +371,36 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-     {
-        "companyId": "source.companyId",
-        "company_awards_title_0": "source.company_awards_title_0",
-        "company_awards_title_1": "source.company_awards_title_1",
-        "company_awards_title_2": "source.company_awards_title_2",
-        "company_awards_title_3": "source.company_awards_title_3",
-        "company_awards_title_4": "source.company_awards_title_4",
-        "company_awards_title_5": "source.company_awards_title_5",
-        "company_awards_title_6": "source.company_awards_title_6",
-        "company_awards_title_7": "source.company_awards_title_7",
-        "company_awards_title_8": "source.company_awards_title_8",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "IsActive": "'True'",
-        "StartDate": "current_timestamp",
-        "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss.SSSS')"""
-     }
+        columns_dict
+#      {
+#         "companyId": "source.companyId",
+#         "company_awards_title_0": "source.company_awards_title_0",
+#         "company_awards_title_1": "source.company_awards_title_1",
+#         "company_awards_title_2": "source.company_awards_title_2",
+#         "company_awards_title_3": "source.company_awards_title_3",
+#         "company_awards_title_4": "source.company_awards_title_4",
+#         "company_awards_title_5": "source.company_awards_title_5",
+#         "company_awards_title_6": "source.company_awards_title_6",
+#         "company_awards_title_7": "source.company_awards_title_7",
+#         "company_awards_title_8": "source.company_awards_title_8",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "IsActive": "'True'",
+#         "StartDate": "current_timestamp",
+#         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+#      }
  )
  .execute()
 )
+
+# COMMAND ----------
+
+columns_dict = {col: "source." + col for col in df_company_awards.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "current_timestamp"
+columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
 
 # COMMAND ----------
 
