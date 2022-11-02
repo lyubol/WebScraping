@@ -40,10 +40,10 @@ posts_path = f"posts/{current_year}/{current_month}/{current_day}/"
 
 # DBTITLE 1,Create Temp Staging Table
 # Read Base
-df_job_benefits = spark.read.format("parquet").load(main_path + job_benefits_path)
+df_job_tools = spark.read.format("parquet").load(main_path + job_tools_path)
 
 # Create the Source Data Frame
-sourceDF = df_job_benefits
+sourceDF = df_job_tools
 sourceDF.display()
 
 # COMMAND ----------
@@ -65,8 +65,8 @@ sourceDF.display()
 # DBTITLE 1,Add SCD Type 2 Columns to Delta Table
 # This command has been ran just once, when the delta table was first created.
 
-df_job_benefits = (
-    df_job_benefits
+df_job_tools = (
+    df_job_tools
     .withColumn("IsActive", lit(True))
     .withColumn("StartDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
     .withColumn("EndDate", lit(None).cast(StringType()))
@@ -77,41 +77,41 @@ df_job_benefits = (
 # DBTITLE 1,Create Delta Table
 # This command has been ran just once, when the delta table was first created.
 
-df_job_benefits.write.format("delta").saveAsTable("jobposts_noblehire.job_benefits")
+df_job_tools.write.format("delta").saveAsTable("jobposts_noblehire.job_tools")
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.job_benefits
+# MAGIC SELECT * FROM jobposts_noblehire.job_tools
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.job_benefits
+# MAGIC DROP TABLE jobposts_noblehire.job_tools
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.job_benefits
+# MAGIC DELETE FROM jobposts_noblehire.job_tools
 # MAGIC WHERE companyId = 1
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC 
-# MAGIC UPDATE jobposts_noblehire.job_benefits
-# MAGIC SET benefits_0_title = 'Not a real benefit.'
+# MAGIC UPDATE jobposts_noblehire.job_tools
+# MAGIC SET tools_0 = 'Not a real tool. It is a veggie for god sake.'
 # MAGIC WHERE companyId = 2
 
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table Instance
-deltaJobBenefits = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/job_benefits")
+deltaJobTools = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/job_tools")
 
-targetDF = deltaJobBenefits.toDF()
+targetDF = deltaJobTools.toDF()
 targetDF.display()
 
 # COMMAND ----------
@@ -187,7 +187,7 @@ scdDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Merge
-(deltaJobBenefits.alias("target")
+(deltaJobTools.alias("target")
  .merge(
      scdDF.alias("source"),
      "target.id = source.MergeKey"
@@ -207,68 +207,26 @@ scdDF.display()
         "Source": "source.Source",
         "IngestionDate": "source.IngestionDate",
         "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "benefits_0_icon": "source.benefits_0_icon",
-        "benefits_0_title": "source.benefits_0_title",
-        "benefits_1_icon": "source.benefits_1_icon",
-        "benefits_1_title": "source.benefits_1_title",
-        "benefits_2_icon": "source.benefits_2_icon",
-        "benefits_2_title": "source.benefits_2_title",
-        "benefits_3_icon": "source.benefits_3_icon",
-        "benefits_3_title": "source.benefits_3_title",
-        "benefits_4_icon": "source.benefits_4_icon",
-        "benefits_4_title": "source.benefits_4_title",
-        "benefits_5_icon": "source.benefits_5_icon",
-        "benefits_5_title": "source.benefits_5_title",
-        "benefits_6_icon": "source.benefits_6_icon",
-        "benefits_6_title": "source.benefits_6_title",
-        "benefits_7_icon": "source.benefits_7_icon",
-        "benefits_7_title": "source.benefits_7_title",
-        "benefits_8_icon": "source.benefits_8_icon",
-        "benefits_8_title": "source.benefits_8_title",
-        "benefits_9_icon": "source.benefits_9_icon",
-        "benefits_9_title": "source.benefits_9_title",
-        "benefits_10_icon": "source.benefits_10_icon",
-        "benefits_10_title": "source.benefits_10_title",
-        "benefits_11_icon": "source.benefits_11_icon",
-        "benefits_11_title": "source.benefits_11_title",
-        "benefits_12_icon": "source.benefits_12_icon",
-        "benefits_12_title": "source.benefits_12_title",
-        "benefits_13_icon": "source.benefits_13_icon",
-        "benefits_13_title": "source.benefits_13_title",
-        "benefits_14_icon": "source.benefits_14_icon",
-        "benefits_14_title": "source.benefits_14_title",
-        "benefits_15_icon": "source.benefits_15_icon",
-        "benefits_15_title": "source.benefits_15_title",
-        "benefits_16_icon": "source.benefits_16_icon",
-        "benefits_16_title": "source.benefits_16_title",
-        "benefits_17_icon": "source.benefits_17_icon",
-        "benefits_17_title": "source.benefits_17_title",
-        "benefits_18_icon": "source.benefits_18_icon",
-        "benefits_18_title": "source.benefits_18_title",
-        "benefits_19_icon": "source.benefits_19_icon",
-        "benefits_19_title": "source.benefits_19_title",
-        "benefits_20_icon": "source.benefits_20_icon",
-        "benefits_20_title": "source.benefits_20_title",
-        "benefits_21_icon": "source.benefits_21_icon",
-        "benefits_21_title": "source.benefits_21_title",
-        "benefits_22_icon": "source.benefits_22_icon",
-        "benefits_22_title": "source.benefits_22_title",
-        "benefits_23_icon": "source.benefits_23_icon",
-        "benefits_23_title": "source.benefits_23_title",
-        "benefits_24_icon": "source.benefits_24_icon",
-        "benefits_24_title": "source.benefits_24_title",
-        "benefits_25_icon": "source.benefits_25_icon",
-        "benefits_25_title": "source.benefits_25_title",
-        "benefits_26_icon": "source.benefits_26_icon",
-        "benefits_26_title": "source.benefits_26_title",
-        "benefits_27_icon": "source.benefits_27_icon",
-        "benefits_27_title": "source.benefits_27_title",
-        "benefits_28_icon": "source.benefits_28_icon",
-        "benefits_28_title": "source.benefits_28_title",
-        "benefits_29_icon": "source.benefits_29_icon",
-        "benefits_29_title": "source.benefits_29_title",
-        "benefits_30_icon": "source.benefits_30_icon",
-        "benefits_30_title": "source.benefits_30_title",
+        "tools_0": "source.tools_0",
+        "tools_1": "source.tools_1",
+        "tools_2": "source.tools_2",
+        "tools_3": "source.tools_3",
+        "tools_4": "source.tools_4",
+        "tools_5": "source.tools_5",
+        "tools_6": "source.tools_6",
+        "tools_7": "source.tools_7",
+        "tools_8": "source.tools_8",
+        "tools_9": "source.tools_9",
+        "tools_10": "source.tools_10",
+        "tools_11": "source.tools_11",
+        "tools_12": "source.tools_12",
+        "tools_13": "source.tools_13",
+        "tools_14": "source.tools_14",
+        "tools_15": "source.tools_15",
+        "tools_16": "source.tools_16",
+        "tools_17": "source.tools_17",
+        "tools_18": "source.tools_18",
+        "tools_19": "source.tools_19",
         "IsActive": "'True'",
         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
 #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
@@ -279,7 +237,7 @@ scdDF.display()
 
 # COMMAND ----------
 
-columns_dict = {col: "source." + col for col in df_job_benefits.columns}
+columns_dict = {col: "source." + col for col in df_job_tools.columns}
 columns_dict["IsActive"] = "'True'"
 columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
 # columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
@@ -289,4 +247,8 @@ columns_dict
 # COMMAND ----------
 
 # DBTITLE 1,Check Delta Table History
-deltaJobBenefits.history().display()
+deltaJobTools.history().display()
+
+# COMMAND ----------
+
+

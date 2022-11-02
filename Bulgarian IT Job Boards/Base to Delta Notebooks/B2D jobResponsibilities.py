@@ -187,7 +187,7 @@ scdDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Merge
-deltaJobResponsibilities(deltaJobResponsibilities.alias("target")
+(deltaJobResponsibilities.alias("target")
  .merge(
      scdDF.alias("source"),
      "target.id = source.MergeKey"
