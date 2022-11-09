@@ -48,6 +48,7 @@ current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 els
 
 # Base location variables
 location_prefix = "/dbfs"
+raw_path = "/mnt/adlslirkov/it-job-boards/Noblehire.io/raw/"
 main_path = "/mnt/adlslirkov/it-job-boards/Noblehire.io/base/"
 temp_path = "/mnt/adlslirkov/it-job-boards/Noblehire.io/temp/"
 company_locations_address_path = f"companyLocationsAddress/{current_year}/{current_month}/{current_day}/"
@@ -114,7 +115,7 @@ def validateRawDataFrame(RawDataFrame, ExpectedColsNum):
 # COMMAND ----------
 
 # DBTITLE 1,Read Raw data
-df = spark.read.format("json").load("/mnt/adlslirkov/it-job-boards/testing/JSON/*.json")
+df = spark.read.format("json").load(raw_path + posts_path)
 
 df.display()
 
@@ -123,7 +124,7 @@ df.display()
 # DBTITLE 1,Add date and source columns
 df = (df
   .withColumn("Source", lit("Noblehire.io"))
-  .withColumn("IngestionDate", current_date())
+  .withColumn("IngestionDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
   .withColumn("postedAt_Timestamp", concat_ws(".",from_unixtime((col("postedAt")/1000),"yyyy-MM-dd HH:mm:ss"),substring(col("postedAt"),-3,3)))
 )
 
@@ -307,6 +308,11 @@ df_company_awards = df_companies.select(*[c for c in df_companies.columns if "aw
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "awards" in c])
 
+# Rename columns
+for column in df_company_awards.columns:
+    new_column = column.replace("[", "_").replace("]", "")
+    df_company_awards = df_company_awards.withColumnRenamed(column, new_column)
+
 # Write to ADLS
 df_company_awards.write.format("parquet").mode("overwrite").save(f"{main_path}{company_awards_path}")
 
@@ -324,6 +330,11 @@ df_company_perks = df_companies.select(*[c for c in df_companies.columns if "per
 
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "perks" in c])
+
+# Rename columns
+for column in df_company_perks.columns:
+    new_column = column.replace("[", "_").replace("]", "")
+    df_company_perks = df_company_perks.withColumnRenamed(column, new_column)
 
 # Write to ADLS
 df_company_perks.write.format("parquet").mode("overwrite").save(f"{main_path}{company_perks_path}")
@@ -343,6 +354,11 @@ df_company_values = df_companies.select(*[c for c in df_companies.columns if "va
 # Drop columns from original DataFrame
 df_companies = df_companies.drop(*[c for c in df_companies.columns if "values" in c])
 
+# Rename columns
+for column in df_company_values.columns:
+    new_column = column.replace("[", "_").replace("]", "")
+    df_company_values = df_company_values.withColumnRenamed(column, new_column)
+    
 # Write to ADLS
 df_company_values.write.format("parquet").mode("overwrite").save(f"{main_path}{company_values_path}")
 
@@ -572,6 +588,11 @@ for each in dbutils.fs.ls(f"{temp_path}CompanyLocationsAddress/"):
     print(f"Reading and joining {each.name}")
     df_companies_clean = spark.read.format("parquet").load(f"{temp_path}CompanyLocationsAddress/{each.name}/")
     df_companies = df_companies.join(df_companies_clean, ["companyId"], how="inner").drop(column)
+    
+# Rename columns
+for column in df_companies.columns:
+    new_column = column.replace("[", "_").replace("]", "")
+    df_companies = df_companies.withColumnRenamed(column, new_column)
     
 df_companies.display()
 
@@ -841,6 +862,10 @@ for column in df_locations.columns:
         df_locations = df_locations.join(df_locations_clean, ["id"], how="inner").drop(column)
 #         df_locations_clean.display()
 
+# Rename columns
+for column in df_locations.columns:
+    new_column = column.replace("[", "_").replace("]", "")
+    df_locations = df_locations.withColumnRenamed(column, new_column)
 
 # Write to ADLS
 df_locations.write.format("parquet").mode("overwrite").save(f"{main_path}{company_locations_path}")
