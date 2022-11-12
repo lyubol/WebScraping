@@ -123,7 +123,7 @@ targetDF.display()
 # DBTITLE 1,Check for new columns in source
 newColumns = [col for col in sourceDF.dtypes if col not in targetDF.dtypes]
 
-print(newColumns)
+print(newColumns) 
 
 # COMMAND ----------
 
