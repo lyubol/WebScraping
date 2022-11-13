@@ -116,6 +116,26 @@ targetDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Check for new columns in source
+newColumns = [col for col in sourceDF.dtypes if col not in targetDF.dtypes]
+
+print(newColumns)
+
+# COMMAND ----------
+
+# DBTITLE 1,Create new columns in target if any in source
+if len(newColumns) > 0:
+    for columnObject in newColumns:
+        spark.sql("ALTER TABLE jobposts_noblehire.posts ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
+        print("Column {} of type {} have been added.".format(columnObject[0], columnObject[1]))
+    else:
+        deltaPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/job_requirements")
+        targetDF = deltaPosts.toDF()
+else:
+    print("No new columns.")
+
+# COMMAND ----------
+
 # DBTITLE 1,Join source and target
 # Rename columns in targetDF, so that we don't need to manually alias them in the join below.
 # Since this code will be used for DataFrames with different number of columns and column names, this is the approach that we need to take.
