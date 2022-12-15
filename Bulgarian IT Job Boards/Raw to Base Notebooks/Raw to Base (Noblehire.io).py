@@ -653,7 +653,7 @@ results={}
 for i in locations_max_size:
   results.update(i.asDict())
 
-df_locations = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("locations")[i] for i in range(results["max(size(locations))"])])
+df_locations = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("locations")[i] for i in range(results["max(size(locations))"])]).distinct()
 
 # Drop the column from the Raw DataFrame
 df = df.drop("locations")
@@ -671,16 +671,15 @@ df_locations.display()
 
 # COMMAND ----------
 
-# DBTITLE 1,Locations
+# DBTITLE 1,Locations - Define Functions
 # Dynamically unpack the location columns. 
 # These columns contain information about the various companies' office locations. 
 # The number of these columns might vary, so they need to be dynamicallt unpacked. 
 # This is implemented using a script that executes in a loop for each location_address column.
 
-for column in df_locations.columns:
-    if column.endswith("address") == True:
         
-        df_locations_clean = (df_locations
+def locationsAddressInitialTransformations(df_locations):
+    return (df_locations
          # Take location_<n>_address column
          .select(
              "id", 
@@ -804,8 +803,11 @@ for column in df_locations.columns:
              f"from_json({column + '_'}types, 'array<string>') as {column + '_'}types_array"
          ).drop(f"{column + '_'}types")
         ).cache()
-
-        #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           
+    
+    
+    
+def locationsAddressAdditionalTransformations(df_locations_clean):
         
         df_locations_clean = (df_locations_clean
          # types - continuation
@@ -857,21 +859,59 @@ for column in df_locations.columns:
         )
         
         #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        return df_locations_clean
+        
         
         # join clean DataFrame back to the original DataFrame and drop the unpacked column
-        df_locations = df_locations.join(df_locations_clean, ["id"], how="inner").drop(column)
+#         df_locations = df_locations.join(df_locations_clean, ["id"], how="inner").drop(column)
 #         df_locations_clean.display()
 
+# # Rename columns
+# for column in df_locations.columns:
+#     new_column = column.replace("[", "_").replace("]", "")
+#     df_locations = df_locations.withColumnRenamed(column, new_column)
+
+# # Write to ADLS
+# df_locations.write.format("parquet").mode("overwrite").save(f"{main_path}{company_locations_path}")
+
+
+# df_locations.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Locations - Apply transformations
+# The functions defined in command "Locations - Define Functions" are executed in a loop for each locations_address columns. As described within the comment section of the previously mentioned command, the number of locations_address columns might vary, hence a loop to execute the transformation logic for each column is needed.
+# Each column is unpacked within a separate DataFrame, which is then saved to a temp table in the data lake. 
+# The next command "Locations - Read locations data" is reading all locations files from the temp table and is joining them to the df_locations DataFrame, which is defined in command "Locations"
+
+for column in df_locations.columns:
+    if column.endswith("address") == True:
+        print(f"Transforming column {column}")
+        df_locations_clean = df_locations.transform(locationsAddressInitialTransformations)
+        df_locations_clean = df_locations_clean.transform(locationsAddressAdditionalTransformations)
+        df_locations_clean.write.format("parquet").save(f"{temp_path}LocationsAddress/{column.replace('[', '_').replace(']', '')}/")
+
+# COMMAND ----------
+
+# DBTITLE 1,Locations - Read locations data
+# This command reads the parquet files, which contains the unpacked locations_address data and joins each file to the original locations DataFrame, which is defined in command "Location"
+
+for each in dbutils.fs.ls(f"{temp_path}LocationsAddress/"):
+    print(f"Reading and joining {each.name}")
+    df_locations_clean = spark.read.format("parquet").load(f"{temp_path}LocationsAddress/{each.name}/")
+    df_locations = df_locations.join(df_locations_clean, ["id"], how="inner").drop(column)
+    
 # Rename columns
 for column in df_locations.columns:
     new_column = column.replace("[", "_").replace("]", "")
     df_locations = df_locations.withColumnRenamed(column, new_column)
-
-# Write to ADLS
-df_locations.write.format("parquet").mode("overwrite").save(f"{main_path}{company_locations_path}")
-
-
+    
 df_locations.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Locations - Write to BASE
+df_locations.write.format("parquet").mode("overwrite").save(f"{main_path}{company_locations_path}")
 
 # COMMAND ----------
 
