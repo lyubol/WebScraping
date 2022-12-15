@@ -910,7 +910,15 @@ df_locations.display()
 
 # COMMAND ----------
 
-# DBTITLE 1,Company General - Write to BASE
+df_locations.groupBy("id").count().display()
+
+# COMMAND ----------
+
+df_locations.where("id = 475").distinct().display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Locations - Write to BASE
 df_locations.write.format("parquet").mode("overwrite").save(f"{main_path}{company_locations_path}")
 
 # COMMAND ----------
