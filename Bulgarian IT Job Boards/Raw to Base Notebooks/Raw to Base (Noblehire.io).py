@@ -653,7 +653,7 @@ results={}
 for i in locations_max_size:
   results.update(i.asDict())
 
-df_locations = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("locations")[i] for i in range(results["max(size(locations))"])])
+df_locations = df.select(col("id"), col("companyId"), col("Source"), col("IngestionDate"), col("postedAt_Timestamp"), *[col("locations")[i] for i in range(results["max(size(locations))"])]).distinct()
 
 # Drop the column from the Raw DataFrame
 df = df.drop("locations")
@@ -907,14 +907,6 @@ for column in df_locations.columns:
     df_locations = df_locations.withColumnRenamed(column, new_column)
     
 df_locations.display()
-
-# COMMAND ----------
-
-df_locations.groupBy("id").count().display()
-
-# COMMAND ----------
-
-df_locations.where("id = 475").distinct().display()
 
 # COMMAND ----------
 
