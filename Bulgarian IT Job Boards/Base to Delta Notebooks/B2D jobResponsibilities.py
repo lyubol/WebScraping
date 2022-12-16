@@ -75,36 +75,44 @@ df_job_responsibilities = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_job_responsibilities.write.format("delta").saveAsTable("jobposts_noblehire.job_responsibilities")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.job_responsibilities
+# df_job_responsibilities.write.format("delta").saveAsTable("jobposts_noblehire.job_responsibilities")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.job_responsibilities
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.job_responsibilities
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.job_responsibilities
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.job_responsibilities
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.job_responsibilities
-# MAGIC SET responsibilities_0_title = 'Not a real responsibility.'
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.job_responsibilities
+# WHERE companyId = 1
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.job_responsibilities
+# SET responsibilities_0_title = 'Not a real responsibility.'
+# WHERE companyId = 2
 
 # COMMAND ----------
 
@@ -113,6 +121,26 @@ deltaJobResponsibilities = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boa
 
 targetDF = deltaJobResponsibilities.toDF()
 targetDF.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Check for new columns in source
+newColumns = [col for col in sourceDF.dtypes if col not in targetDF.dtypes]
+
+print(newColumns)
+
+# COMMAND ----------
+
+# DBTITLE 1,Create new columns in target if any in source
+if len(newColumns) > 0:
+    for columnObject in newColumns:
+        spark.sql("ALTER TABLE jobposts_noblehire.posts ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
+        print("Column {} of type {} have been added.".format(columnObject[0], columnObject[1]))
+    else:
+        deltaPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/job_responsibilities")
+        targetDF = deltaPosts.toDF()
+else:
+    print("No new columns.")
 
 # COMMAND ----------
 
@@ -186,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_job_responsibilities.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaJobResponsibilities.alias("target")
  .merge(
@@ -200,65 +238,56 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "id": "source.id",
-        "companyId": "source.companyId",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "responsibilities_0_icon": "source.responsibilities_0_icon",
-        "responsibilities_0_title": "source.responsibilities_0_title",
-        "responsibilities_1_icon": "source.responsibilities_1_icon",
-        "responsibilities_1_title": "source.responsibilities_1_title",
-        "responsibilities_2_icon": "source.responsibilities_2_icon",
-        "responsibilities_2_title": "source.responsibilities_2_title",
-        "responsibilities_3_icon": "source.responsibilities_3_icon",
-        "responsibilities_3_title": "source.responsibilities_3_title",
-        "responsibilities_4_icon": "source.responsibilities_4_icon",
-        "responsibilities_4_title": "source.responsibilities_4_title",
-        "responsibilities_5_icon": "source.responsibilities_5_icon",
-        "responsibilities_5_title": "source.responsibilities_5_title",
-        "responsibilities_6_icon": "source.responsibilities_6_icon",
-        "responsibilities_6_title": "source.responsibilities_6_title",
-        "responsibilities_7_icon": "source.responsibilities_7_icon",
-        "responsibilities_7_title": "source.responsibilities_7_title",
-        "responsibilities_8_icon": "source.responsibilities_8_icon",
-        "responsibilities_8_title": "source.responsibilities_8_title",
-        "responsibilities_9_icon": "source.responsibilities_9_icon",
-        "responsibilities_9_title": "source.responsibilities_9_title",
-        "responsibilities_10_icon": "source.responsibilities_10_icon",
-        "responsibilities_10_title": "source.responsibilities_10_title",
-        "responsibilities_11_icon": "source.responsibilities_11_icon",
-        "responsibilities_11_title": "source.responsibilities_11_title",
-        "responsibilities_12_icon": "source.responsibilities_12_icon",
-        "responsibilities_12_title": "source.responsibilities_12_title",
-        "responsibilities_13_icon": "source.responsibilities_13_icon",
-        "responsibilities_13_title": "source.responsibilities_13_title",
-        "responsibilities_14_icon": "source.responsibilities_14_icon",
-        "responsibilities_14_title": "source.responsibilities_14_title",
-        "responsibilities_15_icon": "source.responsibilities_15_icon",
-        "responsibilities_15_title": "source.responsibilities_15_title",
-        "responsibilities_16_icon": "source.responsibilities_16_icon",
-        "responsibilities_16_title": "source.responsibilities_16_title",
-        "responsibilities_17_icon": "source.responsibilities_17_icon",
-        "responsibilities_17_title": "source.responsibilities_17_title",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+        columns_dict
+#      {
+#         "id": "source.id",
+#         "companyId": "source.companyId",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "postedAt_Timestamp": "source.postedAt_Timestamp",
+#         "responsibilities_0_icon": "source.responsibilities_0_icon",
+#         "responsibilities_0_title": "source.responsibilities_0_title",
+#         "responsibilities_1_icon": "source.responsibilities_1_icon",
+#         "responsibilities_1_title": "source.responsibilities_1_title",
+#         "responsibilities_2_icon": "source.responsibilities_2_icon",
+#         "responsibilities_2_title": "source.responsibilities_2_title",
+#         "responsibilities_3_icon": "source.responsibilities_3_icon",
+#         "responsibilities_3_title": "source.responsibilities_3_title",
+#         "responsibilities_4_icon": "source.responsibilities_4_icon",
+#         "responsibilities_4_title": "source.responsibilities_4_title",
+#         "responsibilities_5_icon": "source.responsibilities_5_icon",
+#         "responsibilities_5_title": "source.responsibilities_5_title",
+#         "responsibilities_6_icon": "source.responsibilities_6_icon",
+#         "responsibilities_6_title": "source.responsibilities_6_title",
+#         "responsibilities_7_icon": "source.responsibilities_7_icon",
+#         "responsibilities_7_title": "source.responsibilities_7_title",
+#         "responsibilities_8_icon": "source.responsibilities_8_icon",
+#         "responsibilities_8_title": "source.responsibilities_8_title",
+#         "responsibilities_9_icon": "source.responsibilities_9_icon",
+#         "responsibilities_9_title": "source.responsibilities_9_title",
+#         "responsibilities_10_icon": "source.responsibilities_10_icon",
+#         "responsibilities_10_title": "source.responsibilities_10_title",
+#         "responsibilities_11_icon": "source.responsibilities_11_icon",
+#         "responsibilities_11_title": "source.responsibilities_11_title",
+#         "responsibilities_12_icon": "source.responsibilities_12_icon",
+#         "responsibilities_12_title": "source.responsibilities_12_title",
+#         "responsibilities_13_icon": "source.responsibilities_13_icon",
+#         "responsibilities_13_title": "source.responsibilities_13_title",
+#         "responsibilities_14_icon": "source.responsibilities_14_icon",
+#         "responsibilities_14_title": "source.responsibilities_14_title",
+#         "responsibilities_15_icon": "source.responsibilities_15_icon",
+#         "responsibilities_15_title": "source.responsibilities_15_title",
+#         "responsibilities_16_icon": "source.responsibilities_16_icon",
+#         "responsibilities_16_title": "source.responsibilities_16_title",
+#         "responsibilities_17_icon": "source.responsibilities_17_icon",
+#         "responsibilities_17_title": "source.responsibilities_17_title",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
 #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_job_responsibilities.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 

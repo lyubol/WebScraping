@@ -75,36 +75,44 @@ df_company_general = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_company_general.write.format("delta").saveAsTable("jobposts_noblehire.company_general")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.company_general
+# df_company_general.write.format("delta").saveAsTable("jobposts_noblehire.company_general")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.company_general
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.company_general
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.company_general
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.company_general
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.company_general
-# MAGIC SET product = "No product"
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.company_general
+# WHERE companyId = 1
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.company_general
+# SET product = "No product"
+# WHERE companyId = 4
 
 # COMMAND ----------
 
@@ -113,6 +121,26 @@ deltaCompanyGeneral = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/N
 
 targetDF = deltaCompanyGeneral.toDF()
 targetDF.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Check for new columns in source
+newColumns = [col for col in sourceDF.dtypes if col not in targetDF.dtypes]
+
+print(newColumns)
+
+# COMMAND ----------
+
+# DBTITLE 1,Create new columns in target if any in source
+if len(newColumns) > 0:
+    for columnObject in newColumns:
+        spark.sql("ALTER TABLE jobposts_noblehire.posts ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
+        print("Column {} of type {} have been added.".format(columnObject[0], columnObject[1]))
+    else:
+        deltaPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_general")
+        targetDF = deltaPosts.toDF()
+else:
+    print("No new columns.")
 
 # COMMAND ----------
 
@@ -210,7 +238,7 @@ columns_dict
     }
  )
  .whenNotMatchedInsert(values =
-          columns_dict
+        columns_dict
  )
  .execute()
 )

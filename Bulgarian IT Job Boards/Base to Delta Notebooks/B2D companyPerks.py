@@ -75,36 +75,44 @@ df_company_perks = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_company_perks.write.format("delta").saveAsTable("jobposts_noblehire.company_perks")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.company_perks
+# df_company_perks.write.format("delta").saveAsTable("jobposts_noblehire.company_perks")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.company_perks
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.company_perks
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.company_perks
-# MAGIC WHERE companyId = 5
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.company_perks
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.company_perks
-# MAGIC SET company_perks_text_0 = 'Finance a car leasing for you.'
-# MAGIC WHERE companyId = 6
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.company_perks
+# WHERE companyId = 5
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.company_perks
+# SET company_perks_text_0 = 'Finance a car leasing for you.'
+# WHERE companyId = 6
 
 # COMMAND ----------
 
@@ -113,6 +121,26 @@ deltaCompanyPerks = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Nob
 
 targetDF = deltaCompanyPerks.toDF()
 targetDF.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Check for new columns in source
+newColumns = [col for col in sourceDF.dtypes if col not in targetDF.dtypes]
+
+print(newColumns)
+
+# COMMAND ----------
+
+# DBTITLE 1,Create new columns in target if any in source
+if len(newColumns) > 0:
+    for columnObject in newColumns:
+        spark.sql("ALTER TABLE jobposts_noblehire.posts ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
+        print("Column {} of type {} have been added.".format(columnObject[0], columnObject[1]))
+    else:
+        deltaPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_perks")
+        targetDF = deltaPosts.toDF()
+else:
+    print("No new columns.")
 
 # COMMAND ----------
 
@@ -186,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_company_perks.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaCompanyPerks.alias("target")
  .merge(
@@ -200,62 +238,53 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "companyId": "source.companyId",
-        "company_perks_text_0": "source.company_perks_text_0",
-        "company_perks_text_1": "source.company_perks_text_1",
-        "company_perks_text_2": "source.company_perks_text_2",
-        "company_perks_text_3": "source.company_perks_text_3",
-        "company_perks_text_4": "source.company_perks_text_4",
-        "company_perks_text_5": "source.company_perks_text_5",
-        "company_perks_text_6": "source.company_perks_text_6",
-        "company_perks_text_7": "source.company_perks_text_7",
-        "company_perks_text_8": "source.company_perks_text_8",
-        "company_perks_text_9": "source.company_perks_text_9",
-        "company_perks_text_10": "source.company_perks_text_10",
-        "company_perks_text_11": "source.company_perks_text_11",
-        "company_perks_text_12": "source.company_perks_text_12",
-        "company_perks_text_13": "source.company_perks_text_13",
-        "company_perks_text_14": "source.company_perks_text_14",
-        "company_perks_text_15": "source.company_perks_text_15",
-        "company_perks_text_16": "source.company_perks_text_16",
-        "company_perks_text_17": "source.company_perks_text_17",
-        "company_perks_title_0": "source.company_perks_title_0",
-        "company_perks_title_1": "source.company_perks_title_1",
-        "company_perks_title_2": "source.company_perks_title_2",
-        "company_perks_title_3": "source.company_perks_title_3",
-        "company_perks_title_4": "source.company_perks_title_4",
-        "company_perks_title_5": "source.company_perks_title_5",
-        "company_perks_title_6": "source.company_perks_title_6",
-        "company_perks_title_7": "source.company_perks_title_7",
-        "company_perks_title_8": "source.company_perks_title_8",
-        "company_perks_title_9": "source.company_perks_title_9",
-        "company_perks_title_10": "source.company_perks_title_10",
-        "company_perks_title_11": "source.company_perks_title_11",
-        "company_perks_title_12": "source.company_perks_title_12",
-        "company_perks_title_13": "source.company_perks_title_13",
-        "company_perks_title_14": "source.company_perks_title_14",
-        "company_perks_title_15": "source.company_perks_title_15",
-        "company_perks_title_16": "source.company_perks_title_16",
-        "company_perks_title_17": "source.company_perks_title_17",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-     }
+        columns_dict
+#      {
+#         "companyId": "source.companyId",
+#         "company_perks_text_0": "source.company_perks_text_0",
+#         "company_perks_text_1": "source.company_perks_text_1",
+#         "company_perks_text_2": "source.company_perks_text_2",
+#         "company_perks_text_3": "source.company_perks_text_3",
+#         "company_perks_text_4": "source.company_perks_text_4",
+#         "company_perks_text_5": "source.company_perks_text_5",
+#         "company_perks_text_6": "source.company_perks_text_6",
+#         "company_perks_text_7": "source.company_perks_text_7",
+#         "company_perks_text_8": "source.company_perks_text_8",
+#         "company_perks_text_9": "source.company_perks_text_9",
+#         "company_perks_text_10": "source.company_perks_text_10",
+#         "company_perks_text_11": "source.company_perks_text_11",
+#         "company_perks_text_11": "source.company_perks_text_12",
+#         "company_perks_text_11": "source.company_perks_text_13",
+#         "company_perks_text_11": "source.company_perks_text_14",
+#         "company_perks_text_11": "source.company_perks_text_15",
+#         "company_perks_text_11": "source.company_perks_text_16",
+#         "company_perks_text_11": "source.company_perks_text_17",
+#         "company_perks_title_0": "source.company_perks_title_0",
+#         "company_perks_title_1": "source.company_perks_title_1",
+#         "company_perks_title_2": "source.company_perks_title_2",
+#         "company_perks_title_3": "source.company_perks_title_3",
+#         "company_perks_title_4": "source.company_perks_title_4",
+#         "company_perks_title_5": "source.company_perks_title_5",
+#         "company_perks_title_6": "source.company_perks_title_6",
+#         "company_perks_title_7": "source.company_perks_title_7",
+#         "company_perks_title_8": "source.company_perks_title_8",
+#         "company_perks_title_9": "source.company_perks_title_9",
+#         "company_perks_title_10": "source.company_perks_title_10",
+#         "company_perks_title_11": "source.company_perks_title_11",
+#         "company_perks_title_11": "source.company_perks_title_12",
+#         "company_perks_title_11": "source.company_perks_title_13",
+#         "company_perks_title_11": "source.company_perks_title_14",
+#         "company_perks_title_11": "source.company_perks_title_15",
+#         "company_perks_title_11": "source.company_perks_title_16",
+#         "company_perks_title_11": "source.company_perks_title_17",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_company_perks.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 

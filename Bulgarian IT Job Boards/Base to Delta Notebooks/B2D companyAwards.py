@@ -75,36 +75,44 @@ df_company_awards = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_company_awards.write.format("delta").saveAsTable("jobposts_noblehire.company_awards")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.company_awards
+# df_company_awards.write.format("delta").saveAsTable("jobposts_noblehire.company_awards")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.company_awards
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.company_awards
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.company_awards
-# MAGIC WHERE companyId = 13
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.company_awards
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.company_awards
-# MAGIC SET company_awards_title_0 = 'UPDATED total funding'
-# MAGIC WHERE companyId = 10
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.company_awards
+# WHERE companyId = 13
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.company_awards
+# SET company_awards_title_0 = 'UPDATED total funding'
+# WHERE companyId = 10
 
 # COMMAND ----------
 
@@ -113,6 +121,26 @@ deltaCompanyAwards = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/No
 
 targetDF = deltaCompanyAwards.toDF()
 targetDF.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Check for new columns in source
+newColumns = [col for col in sourceDF.dtypes if col not in targetDF.dtypes]
+
+print(newColumns)
+
+# COMMAND ----------
+
+# DBTITLE 1,Create new columns in target if any in source
+if len(newColumns) > 0:
+    for columnObject in newColumns:
+        spark.sql("ALTER TABLE jobposts_noblehire.posts ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
+        print("Column {} of type {} have been added.".format(columnObject[0], columnObject[1]))
+    else:
+        deltaPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_awards")
+        targetDF = deltaPosts.toDF()
+else:
+    print("No new columns.")
 
 # COMMAND ----------
 
@@ -174,6 +202,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_company_awards.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "current_timestamp"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaCompanyAwards.alias("target")
  .merge(
@@ -188,67 +226,32 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "companyId": "source.companyId",
-        "company_awards_title_0": "source.company_awards_title_0",
-        "company_awards_title_1": "source.company_awards_title_1",
-        "company_awards_title_2": "source.company_awards_title_2",
-        "company_awards_title_3": "source.company_awards_title_3",
-        "company_awards_title_4": "source.company_awards_title_4",
-        "company_awards_title_5": "source.company_awards_title_5",
-        "company_awards_title_6": "source.company_awards_title_6",
-        "company_awards_title_7": "source.company_awards_title_7",
-        "company_awards_title_8": "source.company_awards_title_8",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')",
+        columns_dict
+#      {
+#         "companyId": "source.companyId",
+#         "company_awards_title_0": "source.company_awards_title_0",
+#         "company_awards_title_1": "source.company_awards_title_1",
+#         "company_awards_title_2": "source.company_awards_title_2",
+#         "company_awards_title_3": "source.company_awards_title_3",
+#         "company_awards_title_4": "source.company_awards_title_4",
+#         "company_awards_title_5": "source.company_awards_title_5",
+#         "company_awards_title_6": "source.company_awards_title_6",
+#         "company_awards_title_7": "source.company_awards_title_7",
+#         "company_awards_title_8": "source.company_awards_title_8",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')",
 #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+#      }
  )
  .execute()
 )
 
 # COMMAND ----------
 
-columns_dict = {col: "source." + col for col in df_company_awards.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "current_timestamp"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
-
-# COMMAND ----------
-
 # DBTITLE 1,Check Delta Table History
 deltaCompanyAwards.history().display()
-
-# COMMAND ----------
-
-# DBTITLE 1,Job Requirements
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobRequirements
-
-# COMMAND ----------
-
-# DBTITLE 1,Job Responsibilities
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobResponsibilities
-
-# COMMAND ----------
-
-# DBTITLE 1,Job Tools
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobTools
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Create Delta Tables
 
 # COMMAND ----------
 

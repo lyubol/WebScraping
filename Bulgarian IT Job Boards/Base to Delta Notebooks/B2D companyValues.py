@@ -75,36 +75,44 @@ df_company_values = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_company_values.write.format("delta").saveAsTable("jobposts_noblehire.company_values")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.company_values
+# df_company_values.write.format("delta").saveAsTable("jobposts_noblehire.company_values")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.company_values
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.company_values
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.company_values
-# MAGIC WHERE companyId = 12
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.company_values
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.company_values
-# MAGIC SET company_values_text_0 = 'To Succeed. To learn. To others. To change.'
-# MAGIC WHERE companyId = 15
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.company_values
+# WHERE companyId = 12
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.company_values
+# SET company_values_text_0 = 'To Succeed. To learn. To others. To change.'
+# WHERE companyId = 13
 
 # COMMAND ----------
 
@@ -113,6 +121,26 @@ deltaCompanyValues = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/No
 
 targetDF = deltaCompanyValues.toDF()
 targetDF.display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Check for new columns in source
+newColumns = [col for col in sourceDF.dtypes if col not in targetDF.dtypes]
+
+print(newColumns)
+
+# COMMAND ----------
+
+# DBTITLE 1,Create new columns in target if any in source
+if len(newColumns) > 0:
+    for columnObject in newColumns:
+        spark.sql("ALTER TABLE jobposts_noblehire.posts ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
+        print("Column {} of type {} have been added.".format(columnObject[0], columnObject[1]))
+    else:
+        deltaPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_values")
+        targetDF = deltaPosts.toDF()
+else:
+    print("No new columns.")
 
 # COMMAND ----------
 
@@ -186,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_company_values.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaCompanyValues.alias("target")
  .merge(
@@ -200,47 +238,38 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "companyId": "source.companyId",
-        "company_values_text_0": "source.company_values_text_0",
-        "company_values_text_1": "source.company_values_text_1",
-        "company_values_text_2": "source.company_values_text_2",
-        "company_values_text_3": "source.company_values_text_3",
-        "company_values_text_4": "source.company_values_text_4",
-        "company_values_text_5": "source.company_values_text_5",
-        "company_values_text_6": "source.company_values_text_6",
-        "company_values_text_7": "source.company_values_text_7",
-        "company_values_text_8": "source.company_values_text_8",
-        "company_values_text_9": "source.company_values_text_9",
-        "company_values_title_0": "source.company_values_title_0",
-        "company_values_title_1": "source.company_values_title_1",
-        "company_values_title_2": "source.company_values_title_2",
-        "company_values_title_3": "source.company_values_title_3",
-        "company_values_title_4": "source.company_values_title_4",
-        "company_values_title_5": "source.company_values_title_5",
-        "company_values_title_6": "source.company_values_title_6",
-        "company_values_title_7": "source.company_values_title_7",
-        "company_values_title_8": "source.company_values_title_8",
-        "company_values_title_9": "source.company_values_title_9",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')",
-#         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+        columns_dict
+#      {
+#         "companyId": "source.companyId",
+#         "company_values_text_0": "source.company_values_text_0",
+#         "company_values_text_1": "source.company_values_text_1",
+#         "company_values_text_2": "source.company_values_text_2",
+#         "company_values_text_3": "source.company_values_text_3",
+#         "company_values_text_4": "source.company_values_text_4",
+#         "company_values_text_5": "source.company_values_text_5",
+#         "company_values_text_6": "source.company_values_text_6",
+#         "company_values_text_7": "source.company_values_text_7",
+#         "company_values_text_8": "source.company_values_text_8",
+#         "company_values_text_9": "source.company_values_text_9",
+#         "company_values_title_0": "source.company_values_title_0",
+#         "company_values_title_1": "source.company_values_title_1",
+#         "company_values_title_2": "source.company_values_title_2",
+#         "company_values_title_3": "source.company_values_title_3",
+#         "company_values_title_4": "source.company_values_title_4",
+#         "company_values_title_5": "source.company_values_title_5",
+#         "company_values_title_6": "source.company_values_title_6",
+#         "company_values_title_7": "source.company_values_title_7",
+#         "company_values_title_8": "source.company_values_title_8",
+#         "company_values_title_9": "source.company_values_title_9",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')",
+# #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_company_values.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 
