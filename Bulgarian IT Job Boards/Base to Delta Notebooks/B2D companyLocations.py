@@ -75,36 +75,44 @@ df_company_locations = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_company_locations.write.format("delta").saveAsTable("jobposts_noblehire.company_locations")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.company_locations
+# df_company_locations.write.format("delta").saveAsTable("jobposts_noblehire.company_locations")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.company_locations
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.company_locations
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.company_locations
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.company_locations
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.company_locations
-# MAGIC SET locations_0_founded = 2023
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.company_locations
+# WHERE companyId = 4
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.company_locations
+# SET locations_0_founded = 2023
+# WHERE companyId = 1
 
 # COMMAND ----------
 
@@ -206,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_company_locations.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaCompanyLocations.alias("target")
  .merge(
@@ -220,234 +238,225 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "companyId": "source.companyId",
-        "locations_0_comment": "source.locations_0_comment",
-        "locations_0_founded": "source.locations_0_founded",
-        "locations_0_id": "source.locations_0_id",
-        "locations_0_teamSize": "source.locations_0_teamSize",
-        "locations_1_comment": "source.locations_1_comment",
-        "locations_1_founded": "source.locations_1_founded",
-        "locations_1_id": "source.locations_1_id",
-        "locations_1_teamSize": "source.locations_1_teamSize",
-        "locations_2_comment": "source.locations_2_comment",
-        "locations_2_founded": "source.locations_2_founded",
-        "locations_2_id": "source.locations_2_id",
-        "locations_2_teamSize": "source.locations_2_teamSize",
-        "locations_3_comment": "source.locations_3_comment",
-        "locations_3_founded": "source.locations_3_founded",
-        "locations_3_id": "source.locations_3_id",
-        "locations_3_teamSize": "source.locations_3_teamSize",
-        "locations_4_comment": "source.locations_4_comment",
-        "locations_4_founded": "source.locations_4_founded",
-        "locations_4_id": "source.locations_4_id",
-        "locations_4_teamSize": "source.locations_4_teamSize",
-        "locations_0_address_formatted_address": "source.locations_0_address_formatted_address",
-        "locations_0_address_place_id": "source.locations_0_address_place_id",
-        "locations_0_address_location_type": "source.locations_0_address_location_type",
-        "locations_0_address_latitude": "source.locations_0_address_latitude",
-        "locations_0_address_longitude": "source.locations_0_address_longitude",
-        "locations_0_address_viewport_northeast_latitude": "source.locations_0_address_viewport_northeast_latitude",
-        "locations_0_address_viewport_northeast_longitude": "source.locations_0_address_viewport_northeast_longitude",
-        "locations_0_address_viewport_southwest_latitude": "source.locations_0_address_viewport_southwest_latitude",
-        "locations_0_address_viewport_southwest_longitude": "source.locations_0_address_viewport_southwest_longitude",
-        "locations_0_address_bounds_northeast_latitude": "source.locations_0_address_bounds_northeast_latitude",
-        "locations_0_address_bounds_northeast_longitude": "source.locations_0_address_bounds_northeast_longitude",
-        "locations_0_address_bounds_southwest_latitude": "source.locations_0_address_bounds_southwest_latitude",
-        "locations_0_address_bounds_southwest_longitude": "source.locations_0_address_bounds_southwest_longitude",
-        "locations_0_address_types_array_0": "source.locations_0_address_types_array_0",
-        "locations_0_address_types_array_1": "source.locations_0_address_types_array_1",
-        "locations_0_address_types_array_2": "source.locations_0_address_types_array_2",
-        "locations_0_address_address_components_array_0_long_name": "source.locations_0_address_address_components_array_0_long_name",
-        "locations_0_address_address_components_array_1_long_name": "source.locations_0_address_address_components_array_1_long_name",
-        "locations_0_address_address_components_array_2_long_name": "source.locations_0_address_address_components_array_2_long_name",
-        "locations_0_address_address_components_array_3_long_name": "source.locations_0_address_address_components_array_3_long_name",
-        "locations_0_address_address_components_array_4_long_name": "source.locations_0_address_address_components_array_4_long_name",
-        "locations_0_address_address_components_array_5_long_name": "source.locations_0_address_address_components_array_5_long_name",
-        "locations_0_address_address_components_array_6_long_name": "source.locations_0_address_address_components_array_6_long_name",
-        "locations_0_address_address_components_array_7_long_name": "source.locations_0_address_address_components_array_7_long_name",
-        "locations_0_address_address_components_array_0_short_name": "source.locations_0_address_address_components_array_0_short_name",
-        "locations_0_address_address_components_array_1_short_name": "source.locations_0_address_address_components_array_1_short_name",
-        "locations_0_address_address_components_array_2_short_name": "source.locations_0_address_address_components_array_2_short_name",
-        "locations_0_address_address_components_array_3_short_name": "source.locations_0_address_address_components_array_3_short_name",
-        "locations_0_address_address_components_array_4_short_name": "source.locations_0_address_address_components_array_4_short_name",
-        "locations_0_address_address_components_array_5_short_name": "source.locations_0_address_address_components_array_5_short_name",
-        "locations_0_address_address_components_array_6_short_name": "source.locations_0_address_address_components_array_6_short_name",
-        "locations_0_address_address_components_array_7_short_name": "source.locations_0_address_address_components_array_7_short_name",
-        "locations_0_address_address_components_array_0_types_0": "source.locations_0_address_address_components_array_0_types_0",
-        "locations_0_address_address_components_array_0_types_1": "source.locations_0_address_address_components_array_0_types_1",
-        "locations_0_address_address_components_array_1_types_0": "source.locations_0_address_address_components_array_1_types_0",
-        "locations_0_address_address_components_array_1_types_1": "source.locations_0_address_address_components_array_1_types_1",
-        "locations_0_address_address_components_array_2_types_0": "source.locations_0_address_address_components_array_2_types_0",
-        "locations_0_address_address_components_array_2_types_1": "source.locations_0_address_address_components_array_2_types_1",
-        "locations_0_address_address_components_array_2_types_2": "source.locations_0_address_address_components_array_2_types_2",
-        "locations_0_address_address_components_array_3_types_0": "source.locations_0_address_address_components_array_3_types_0",
-        "locations_0_address_address_components_array_3_types_1": "source.locations_0_address_address_components_array_3_types_1",
-        "locations_0_address_address_components_array_4_types_0": "source.locations_0_address_address_components_array_4_types_0",
-        "locations_0_address_address_components_array_4_types_1": "source.locations_0_address_address_components_array_4_types_1",
-        "locations_0_address_address_components_array_5_types_0": "source.locations_0_address_address_components_array_5_types_0",
-        "locations_0_address_address_components_array_5_types_1": "source.locations_0_address_address_components_array_5_types_1",
-        "locations_0_address_address_components_array_6_types_0": "source.locations_0_address_address_components_array_6_types_0",
-        "locations_0_address_address_components_array_6_types_1": "source.locations_0_address_address_components_array_6_types_1",
-        "locations_0_address_address_components_array_7_types_0": "source.locations_0_address_address_components_array_7_types_0",
-        "locations_1_address_formatted_address": "source.locations_1_address_formatted_address",
-        "locations_1_address_place_id": "source.locations_1_address_place_id",
-        "locations_1_address_location_type": "source.locations_1_address_location_type",
-        "locations_1_address_latitude": "source.locations_1_address_latitude",
-        "locations_1_address_longitude": "source.locations_1_address_longitude",
-        "locations_1_address_viewport_northeast_latitude": "source.locations_1_address_viewport_northeast_latitude",
-        "locations_1_address_viewport_northeast_longitude": "source.locations_1_address_viewport_northeast_longitude",
-        "locations_1_address_viewport_southwest_latitude": "source.locations_1_address_viewport_southwest_latitude",
-        "locations_1_address_viewport_southwest_longitude": "source.locations_1_address_viewport_southwest_longitude",
-        "locations_1_address_bounds_northeast_latitude": "source.locations_1_address_bounds_northeast_latitude",
-        "locations_1_address_bounds_northeast_longitude": "source.locations_1_address_bounds_northeast_longitude",
-        "locations_1_address_bounds_southwest_latitude": "source.locations_1_address_bounds_southwest_latitude",
-        "locations_1_address_bounds_southwest_longitude": "source.locations_1_address_bounds_southwest_longitude",
-        "locations_1_address_types_array_0": "source.locations_1_address_types_array_0",
-        "locations_1_address_types_array_1": "source.locations_1_address_types_array_1",
-        "locations_1_address_address_components_array_0_long_name": "source.locations_1_address_address_components_array_0_long_name",
-        "locations_1_address_address_components_array_1_long_name": "source.locations_1_address_address_components_array_1_long_name",
-        "locations_1_address_address_components_array_2_long_name": "source.locations_1_address_address_components_array_2_long_name",
-        "locations_1_address_address_components_array_3_long_name": "source.locations_1_address_address_components_array_3_long_name",
-        "locations_1_address_address_components_array_4_long_name": "source.locations_1_address_address_components_array_4_long_name",
-        "locations_1_address_address_components_array_5_long_name": "source.locations_1_address_address_components_array_5_long_name",
-        "locations_1_address_address_components_array_6_long_name": "source.locations_1_address_address_components_array_6_long_name",
-        "locations_1_address_address_components_array_0_short_name": "source.locations_1_address_address_components_array_0_short_name",
-        "locations_1_address_address_components_array_1_short_name": "source.locations_1_address_address_components_array_1_short_name",
-        "locations_1_address_address_components_array_2_short_name": "source.locations_1_address_address_components_array_2_short_name",
-        "locations_1_address_address_components_array_3_short_name": "source.locations_1_address_address_components_array_3_short_name",
-        "locations_1_address_address_components_array_4_short_name": "source.locations_1_address_address_components_array_4_short_name",
-        "locations_1_address_address_components_array_5_short_name": "source.locations_1_address_address_components_array_5_short_name",
-        "locations_1_address_address_components_array_6_short_name": "source.locations_1_address_address_components_array_6_short_name",
-        "locations_1_address_address_components_array_0_types_0": "source.locations_1_address_address_components_array_0_types_0",
-        "locations_1_address_address_components_array_0_types_1": "source.locations_1_address_address_components_array_0_types_1",
-        "locations_1_address_address_components_array_1_types_0": "source.locations_1_address_address_components_array_1_types_0",
-        "locations_1_address_address_components_array_1_types_1": "source.locations_1_address_address_components_array_1_types_1",
-        "locations_1_address_address_components_array_2_types_0": "source.locations_1_address_address_components_array_2_types_0",
-        "locations_1_address_address_components_array_2_types_1": "source.locations_1_address_address_components_array_2_types_1",
-        "locations_1_address_address_components_array_3_types_0": "source.locations_1_address_address_components_array_3_types_0",
-        "locations_1_address_address_components_array_3_types_1": "source.locations_1_address_address_components_array_3_types_1",
-        "locations_1_address_address_components_array_4_types_0": "source.locations_1_address_address_components_array_4_types_0",
-        "locations_1_address_address_components_array_4_types_1": "source.locations_1_address_address_components_array_4_types_1",
-        "locations_1_address_address_components_array_5_types_0": "source.locations_1_address_address_components_array_5_types_0",
-        "locations_1_address_address_components_array_5_types_1": "source.locations_1_address_address_components_array_5_types_1",
-        "locations_1_address_address_components_array_6_types_0": "source.locations_1_address_address_components_array_6_types_0",
-        "locations_2_address_formatted_address": "source.locations_2_address_formatted_address",
-        "locations_2_address_place_id": "source.locations_2_address_place_id",
-        "locations_2_address_location_type": "source.locations_2_address_location_type",
-        "locations_2_address_latitude": "source.locations_2_address_latitude",
-        "locations_2_address_longitude": "source.locations_2_address_longitude",
-        "locations_2_address_viewport_northeast_latitude": "source.locations_2_address_viewport_northeast_latitude",
-        "locations_2_address_viewport_northeast_longitude": "source.locations_2_address_viewport_northeast_longitude",
-        "locations_2_address_viewport_southwest_latitude": "source.locations_2_address_viewport_southwest_latitude",
-        "locations_2_address_viewport_southwest_longitude": "source.locations_2_address_viewport_southwest_longitude",
-        "locations_2_address_bounds_northeast_latitude": "source.locations_2_address_bounds_northeast_latitude",
-        "locations_2_address_bounds_northeast_longitude": "source.locations_2_address_bounds_northeast_longitude",
-        "locations_2_address_bounds_southwest_latitude": "source.locations_2_address_bounds_southwest_latitude",
-        "locations_2_address_bounds_southwest_longitude": "source.locations_2_address_bounds_southwest_longitude",
-        "locations_2_address_types_array_0": "source.locations_2_address_types_array_0",
-        "locations_2_address_types_array_1": "source.locations_2_address_types_array_1",
-        "locations_2_address_address_components_array_0_long_name": "source.locations_2_address_address_components_array_0_long_name",
-        "locations_2_address_address_components_array_1_long_name": "source.locations_2_address_address_components_array_1_long_name",
-        "locations_2_address_address_components_array_2_long_name": "source.locations_2_address_address_components_array_2_long_name",
-        "locations_2_address_address_components_array_3_long_name": "source.locations_2_address_address_components_array_3_long_name",
-        "locations_2_address_address_components_array_4_long_name": "source.locations_2_address_address_components_array_4_long_name",
-        "locations_2_address_address_components_array_5_long_name": "source.locations_2_address_address_components_array_5_long_name",
-        "locations_2_address_address_components_array_6_long_name": "source.locations_2_address_address_components_array_6_long_name",
-        "locations_2_address_address_components_array_0_short_name": "source.locations_2_address_address_components_array_0_short_name",
-        "locations_2_address_address_components_array_1_short_name": "source.locations_2_address_address_components_array_1_short_name",
-        "locations_2_address_address_components_array_2_short_name": "source.locations_2_address_address_components_array_2_short_name",
-        "locations_2_address_address_components_array_3_short_name": "source.locations_2_address_address_components_array_3_short_name",
-        "locations_2_address_address_components_array_4_short_name": "source.locations_2_address_address_components_array_4_short_name",
-        "locations_2_address_address_components_array_5_short_name": "source.locations_2_address_address_components_array_5_short_name",
-        "locations_2_address_address_components_array_6_short_name": "source.locations_2_address_address_components_array_6_short_name",
-        "locations_2_address_address_components_array_0_types_0": "source.locations_2_address_address_components_array_0_types_0",
-        "locations_2_address_address_components_array_0_types_1": "source.locations_2_address_address_components_array_0_types_1",
-        "locations_2_address_address_components_array_1_types_0": "source.locations_2_address_address_components_array_1_types_0",
-        "locations_2_address_address_components_array_1_types_1": "source.locations_2_address_address_components_array_1_types_1",
-        "locations_2_address_address_components_array_2_types_0": "source.locations_2_address_address_components_array_2_types_0",
-        "locations_2_address_address_components_array_2_types_1": "source.locations_2_address_address_components_array_2_types_1",
-        "locations_2_address_address_components_array_3_types_0": "source.locations_2_address_address_components_array_3_types_0",
-        "locations_2_address_address_components_array_3_types_1": "source.locations_2_address_address_components_array_3_types_1",
-        "locations_2_address_address_components_array_4_types_0": "source.locations_2_address_address_components_array_4_types_0",
-        "locations_2_address_address_components_array_4_types_1": "source.locations_2_address_address_components_array_4_types_1",
-        "locations_2_address_address_components_array_5_types_0": "source.locations_2_address_address_components_array_5_types_0",
-        "locations_2_address_address_components_array_5_types_1": "source.locations_2_address_address_components_array_5_types_1",
-        "locations_2_address_address_components_array_6_types_0": "source.locations_2_address_address_components_array_6_types_0",
-        "locations_3_address_formatted_address": "source.locations_3_address_formatted_address",
-        "locations_3_address_place_id": "source.locations_3_address_place_id",
-        "locations_3_address_location_type": "source.locations_3_address_location_type",
-        "locations_3_address_latitude": "source.locations_3_address_latitude",
-        "locations_3_address_longitude": "source.locations_3_address_longitude",
-        "locations_3_address_viewport_northeast_latitude": "source.locations_3_address_viewport_northeast_latitude",
-        "locations_3_address_viewport_northeast_longitude": "source.locations_3_address_viewport_northeast_longitude",
-        "locations_3_address_viewport_southwest_latitude": "source.locations_3_address_viewport_southwest_latitude",
-        "locations_3_address_viewport_southwest_longitude": "source.locations_3_address_viewport_southwest_longitude",
-        "locations_3_address_bounds_northeast_latitude": "source.locations_3_address_bounds_northeast_latitude",
-        "locations_3_address_bounds_northeast_longitude": "source.locations_3_address_bounds_northeast_longitude",
-        "locations_3_address_bounds_southwest_latitude": "source.locations_3_address_bounds_southwest_latitude",
-        "locations_3_address_bounds_southwest_longitude": "source.locations_3_address_bounds_southwest_longitude",
-        "locations_3_address_types_array_0": "source.locations_3_address_types_array_0",
-        "locations_3_address_types_array_1": "source.locations_3_address_types_array_1",
-        "locations_3_address_address_components_array_0_long_name": "source.locations_3_address_address_components_array_0_long_name",
-        "locations_3_address_address_components_array_1_long_name": "source.locations_3_address_address_components_array_1_long_name",
-        "locations_3_address_address_components_array_2_long_name": "source.locations_3_address_address_components_array_2_long_name",
-        "locations_3_address_address_components_array_0_short_name": "source.locations_3_address_address_components_array_0_short_name",
-        "locations_3_address_address_components_array_1_short_name": "source.locations_3_address_address_components_array_1_short_name",
-        "locations_3_address_address_components_array_2_short_name": "source.locations_3_address_address_components_array_2_short_name",
-        "locations_3_address_address_components_array_0_types_0": "source.locations_3_address_address_components_array_0_types_0",
-        "locations_3_address_address_components_array_0_types_1": "source.locations_3_address_address_components_array_0_types_1",
-        "locations_3_address_address_components_array_1_types_0": "source.locations_3_address_address_components_array_1_types_0",
-        "locations_3_address_address_components_array_1_types_1": "source.locations_3_address_address_components_array_1_types_1",
-        "locations_3_address_address_components_array_2_types_0": "source.locations_3_address_address_components_array_2_types_0",
-        "locations_3_address_address_components_array_2_types_1": "source.locations_3_address_address_components_array_2_types_1",
-        "locations_4_address_formatted_address": "source.locations_4_address_formatted_address",
-        "locations_4_address_place_id": "source.locations_4_address_place_id",
-        "locations_4_address_location_type": "source.locations_4_address_location_type",
-        "locations_4_address_latitude": "source.locations_4_address_latitude",
-        "locations_4_address_longitude": "source.locations_4_address_longitude",
-        "locations_4_address_viewport_northeast_latitude": "source.locations_4_address_viewport_northeast_latitude",
-        "locations_4_address_viewport_northeast_longitude": "source.locations_4_address_viewport_northeast_longitude",
-        "locations_4_address_viewport_southwest_latitude": "source.locations_4_address_viewport_southwest_latitude",
-        "locations_4_address_viewport_southwest_longitude": "source.locations_4_address_viewport_southwest_longitude",
-        "locations_4_address_bounds_northeast_latitude": "source.locations_4_address_bounds_northeast_latitude",
-        "locations_4_address_bounds_northeast_longitude": "source.locations_4_address_bounds_northeast_longitude",
-        "locations_4_address_bounds_southwest_latitude": "source.locations_4_address_bounds_southwest_latitude",
-        "locations_4_address_bounds_southwest_longitude": "source.locations_4_address_bounds_southwest_longitude",
-        "locations_4_address_types_array_0": "source.locations_4_address_types_array_0",
-        "locations_4_address_types_array_1": "source.locations_4_address_types_array_1",
-        "locations_4_address_address_components_array_0_long_name": "source.locations_4_address_address_components_array_0_long_name",
-        "locations_4_address_address_components_array_1_long_name": "source.locations_4_address_address_components_array_1_long_name",
-        "locations_4_address_address_components_array_2_long_name": "source.locations_4_address_address_components_array_2_long_name",
-        "locations_4_address_address_components_array_0_short_name": "source.locations_4_address_address_components_array_0_short_name",
-        "locations_4_address_address_components_array_1_short_name": "source.locations_4_address_address_components_array_1_short_name",
-        "locations_4_address_address_components_array_2_short_name": "source.locations_4_address_address_components_array_2_short_name",
-        "locations_4_address_address_components_array_0_types_0": "source.locations_4_address_address_components_array_0_types_0",
-        "locations_4_address_address_components_array_0_types_1": "source.locations_4_address_address_components_array_0_types_1",
-        "locations_4_address_address_components_array_1_types_0": "source.locations_4_address_address_components_array_1_types_0",
-        "locations_4_address_address_components_array_1_types_1": "source.locations_4_address_address_components_array_1_types_1",
-        "locations_4_address_address_components_array_2_types_0": "source.locations_4_address_address_components_array_2_types_0",
-        "locations_4_address_address_components_array_2_types_1": "source.locations_4_address_address_components_array_2_types_1",
-        "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')",
+        columns_dict
+#      {
+#         "companyId": "source.companyId",
+#         "locations_0_comment": "source.locations_0_comment",
+#         "locations_0_founded": "source.locations_0_founded",
+#         "locations_0_id": "source.locations_0_id",
+#         "locations_0_teamSize": "source.locations_0_teamSize",
+#         "locations_1_comment": "source.locations_1_comment",
+#         "locations_1_founded": "source.locations_1_founded",
+#         "locations_1_id": "source.locations_1_id",
+#         "locations_1_teamSize": "source.locations_1_teamSize",
+#         "locations_2_comment": "source.locations_2_comment",
+#         "locations_2_founded": "source.locations_2_founded",
+#         "locations_2_id": "source.locations_2_id",
+#         "locations_2_teamSize": "source.locations_2_teamSize",
+#         "locations_3_comment": "source.locations_3_comment",
+#         "locations_3_founded": "source.locations_3_founded",
+#         "locations_3_id": "source.locations_3_id",
+#         "locations_3_teamSize": "source.locations_3_teamSize",
+#         "locations_4_comment": "source.locations_4_comment",
+#         "locations_4_founded": "source.locations_4_founded",
+#         "locations_4_id": "source.locations_4_id",
+#         "locations_4_teamSize": "source.locations_4_teamSize",
+#         "locations_0_address_formatted_address": "source.locations_0_address_formatted_address",
+#         "locations_0_address_place_id": "source.locations_0_address_place_id",
+#         "locations_0_address_location_type": "source.locations_0_address_location_type",
+#         "locations_0_address_latitude": "source.locations_0_address_latitude",
+#         "locations_0_address_longitude": "source.locations_0_address_longitude",
+#         "locations_0_address_viewport_northeast_latitude": "source.locations_0_address_viewport_northeast_latitude",
+#         "locations_0_address_viewport_northeast_longitude": "source.locations_0_address_viewport_northeast_longitude",
+#         "locations_0_address_viewport_southwest_latitude": "source.locations_0_address_viewport_southwest_latitude",
+#         "locations_0_address_viewport_southwest_longitude": "source.locations_0_address_viewport_southwest_longitude",
+#         "locations_0_address_bounds_northeast_latitude": "source.locations_0_address_bounds_northeast_latitude",
+#         "locations_0_address_bounds_northeast_longitude": "source.locations_0_address_bounds_northeast_longitude",
+#         "locations_0_address_bounds_southwest_latitude": "source.locations_0_address_bounds_southwest_latitude",
+#         "locations_0_address_bounds_southwest_longitude": "source.locations_0_address_bounds_southwest_longitude",
+#         "locations_0_address_types_array_0": "source.locations_0_address_types_array_0",
+#         "locations_0_address_types_array_1": "source.locations_0_address_types_array_1",
+#         "locations_0_address_types_array_2": "source.locations_0_address_types_array_2",
+#         "locations_0_address_address_components_array_0_long_name": "source.locations_0_address_address_components_array_0_long_name",
+#         "locations_0_address_address_components_array_1_long_name": "source.locations_0_address_address_components_array_1_long_name",
+#         "locations_0_address_address_components_array_2_long_name": "source.locations_0_address_address_components_array_2_long_name",
+#         "locations_0_address_address_components_array_3_long_name": "source.locations_0_address_address_components_array_3_long_name",
+#         "locations_0_address_address_components_array_4_long_name": "source.locations_0_address_address_components_array_4_long_name",
+#         "locations_0_address_address_components_array_5_long_name": "source.locations_0_address_address_components_array_5_long_name",
+#         "locations_0_address_address_components_array_6_long_name": "source.locations_0_address_address_components_array_6_long_name",
+#         "locations_0_address_address_components_array_7_long_name": "source.locations_0_address_address_components_array_7_long_name",
+#         "locations_0_address_address_components_array_0_short_name": "source.locations_0_address_address_components_array_0_short_name",
+#         "locations_0_address_address_components_array_1_short_name": "source.locations_0_address_address_components_array_1_short_name",
+#         "locations_0_address_address_components_array_2_short_name": "source.locations_0_address_address_components_array_2_short_name",
+#         "locations_0_address_address_components_array_3_short_name": "source.locations_0_address_address_components_array_3_short_name",
+#         "locations_0_address_address_components_array_4_short_name": "source.locations_0_address_address_components_array_4_short_name",
+#         "locations_0_address_address_components_array_5_short_name": "source.locations_0_address_address_components_array_5_short_name",
+#         "locations_0_address_address_components_array_6_short_name": "source.locations_0_address_address_components_array_6_short_name",
+#         "locations_0_address_address_components_array_7_short_name": "source.locations_0_address_address_components_array_7_short_name",
+#         "locations_0_address_address_components_array_0_types_0": "source.locations_0_address_address_components_array_0_types_0",
+#         "locations_0_address_address_components_array_0_types_1": "source.locations_0_address_address_components_array_0_types_1",
+#         "locations_0_address_address_components_array_1_types_0": "source.locations_0_address_address_components_array_1_types_0",
+#         "locations_0_address_address_components_array_1_types_1": "source.locations_0_address_address_components_array_1_types_1",
+#         "locations_0_address_address_components_array_2_types_0": "source.locations_0_address_address_components_array_2_types_0",
+#         "locations_0_address_address_components_array_2_types_1": "source.locations_0_address_address_components_array_2_types_1",
+#         "locations_0_address_address_components_array_2_types_2": "source.locations_0_address_address_components_array_2_types_2",
+#         "locations_0_address_address_components_array_3_types_0": "source.locations_0_address_address_components_array_3_types_0",
+#         "locations_0_address_address_components_array_3_types_1": "source.locations_0_address_address_components_array_3_types_1",
+#         "locations_0_address_address_components_array_4_types_0": "source.locations_0_address_address_components_array_4_types_0",
+#         "locations_0_address_address_components_array_4_types_1": "source.locations_0_address_address_components_array_4_types_1",
+#         "locations_0_address_address_components_array_5_types_0": "source.locations_0_address_address_components_array_5_types_0",
+#         "locations_0_address_address_components_array_5_types_1": "source.locations_0_address_address_components_array_5_types_1",
+#         "locations_0_address_address_components_array_6_types_0": "source.locations_0_address_address_components_array_6_types_0",
+#         "locations_0_address_address_components_array_6_types_1": "source.locations_0_address_address_components_array_6_types_1",
+#         "locations_0_address_address_components_array_7_types_0": "source.locations_0_address_address_components_array_7_types_0",
+#         "locations_1_address_formatted_address": "source.locations_1_address_formatted_address",
+#         "locations_1_address_place_id": "source.locations_1_address_place_id",
+#         "locations_1_address_location_type": "source.locations_1_address_location_type",
+#         "locations_1_address_latitude": "source.locations_1_address_latitude",
+#         "locations_1_address_longitude": "source.locations_1_address_longitude",
+#         "locations_1_address_viewport_northeast_latitude": "source.locations_1_address_viewport_northeast_latitude",
+#         "locations_1_address_viewport_northeast_longitude": "source.locations_1_address_viewport_northeast_longitude",
+#         "locations_1_address_viewport_southwest_latitude": "source.locations_1_address_viewport_southwest_latitude",
+#         "locations_1_address_viewport_southwest_longitude": "source.locations_1_address_viewport_southwest_longitude",
+#         "locations_1_address_bounds_northeast_latitude": "source.locations_1_address_bounds_northeast_latitude",
+#         "locations_1_address_bounds_northeast_longitude": "source.locations_1_address_bounds_northeast_longitude",
+#         "locations_1_address_bounds_southwest_latitude": "source.locations_1_address_bounds_southwest_latitude",
+#         "locations_1_address_bounds_southwest_longitude": "source.locations_1_address_bounds_southwest_longitude",
+#         "locations_1_address_types_array_0": "source.locations_1_address_types_array_0",
+#         "locations_1_address_types_array_1": "source.locations_1_address_types_array_1",
+#         "locations_1_address_address_components_array_0_long_name": "source.locations_1_address_address_components_array_0_long_name",
+#         "locations_1_address_address_components_array_1_long_name": "source.locations_1_address_address_components_array_1_long_name",
+#         "locations_1_address_address_components_array_2_long_name": "source.locations_1_address_address_components_array_2_long_name",
+#         "locations_1_address_address_components_array_3_long_name": "source.locations_1_address_address_components_array_3_long_name",
+#         "locations_1_address_address_components_array_4_long_name": "source.locations_1_address_address_components_array_4_long_name",
+#         "locations_1_address_address_components_array_5_long_name": "source.locations_1_address_address_components_array_5_long_name",
+#         "locations_1_address_address_components_array_6_long_name": "source.locations_1_address_address_components_array_6_long_name",
+#         "locations_1_address_address_components_array_0_short_name": "source.locations_1_address_address_components_array_0_short_name",
+#         "locations_1_address_address_components_array_1_short_name": "source.locations_1_address_address_components_array_1_short_name",
+#         "locations_1_address_address_components_array_2_short_name": "source.locations_1_address_address_components_array_2_short_name",
+#         "locations_1_address_address_components_array_3_short_name": "source.locations_1_address_address_components_array_3_short_name",
+#         "locations_1_address_address_components_array_4_short_name": "source.locations_1_address_address_components_array_4_short_name",
+#         "locations_1_address_address_components_array_5_short_name": "source.locations_1_address_address_components_array_5_short_name",
+#         "locations_1_address_address_components_array_6_short_name": "source.locations_1_address_address_components_array_6_short_name",
+#         "locations_1_address_address_components_array_0_types_0": "source.locations_1_address_address_components_array_0_types_0",
+#         "locations_1_address_address_components_array_0_types_1": "source.locations_1_address_address_components_array_0_types_1",
+#         "locations_1_address_address_components_array_1_types_0": "source.locations_1_address_address_components_array_1_types_0",
+#         "locations_1_address_address_components_array_1_types_1": "source.locations_1_address_address_components_array_1_types_1",
+#         "locations_1_address_address_components_array_2_types_0": "source.locations_1_address_address_components_array_2_types_0",
+#         "locations_1_address_address_components_array_2_types_1": "source.locations_1_address_address_components_array_2_types_1",
+#         "locations_1_address_address_components_array_3_types_0": "source.locations_1_address_address_components_array_3_types_0",
+#         "locations_1_address_address_components_array_3_types_1": "source.locations_1_address_address_components_array_3_types_1",
+#         "locations_1_address_address_components_array_4_types_0": "source.locations_1_address_address_components_array_4_types_0",
+#         "locations_1_address_address_components_array_4_types_1": "source.locations_1_address_address_components_array_4_types_1",
+#         "locations_1_address_address_components_array_5_types_0": "source.locations_1_address_address_components_array_5_types_0",
+#         "locations_1_address_address_components_array_5_types_1": "source.locations_1_address_address_components_array_5_types_1",
+#         "locations_1_address_address_components_array_6_types_0": "source.locations_1_address_address_components_array_6_types_0",
+#         "locations_2_address_formatted_address": "source.locations_2_address_formatted_address",
+#         "locations_2_address_place_id": "source.locations_2_address_place_id",
+#         "locations_2_address_location_type": "source.locations_2_address_location_type",
+#         "locations_2_address_latitude": "source.locations_2_address_latitude",
+#         "locations_2_address_longitude": "source.locations_2_address_longitude",
+#         "locations_2_address_viewport_northeast_latitude": "source.locations_2_address_viewport_northeast_latitude",
+#         "locations_2_address_viewport_northeast_longitude": "source.locations_2_address_viewport_northeast_longitude",
+#         "locations_2_address_viewport_southwest_latitude": "source.locations_2_address_viewport_southwest_latitude",
+#         "locations_2_address_viewport_southwest_longitude": "source.locations_2_address_viewport_southwest_longitude",
+#         "locations_2_address_bounds_northeast_latitude": "source.locations_2_address_bounds_northeast_latitude",
+#         "locations_2_address_bounds_northeast_longitude": "source.locations_2_address_bounds_northeast_longitude",
+#         "locations_2_address_bounds_southwest_latitude": "source.locations_2_address_bounds_southwest_latitude",
+#         "locations_2_address_bounds_southwest_longitude": "source.locations_2_address_bounds_southwest_longitude",
+#         "locations_2_address_types_array_0": "source.locations_2_address_types_array_0",
+#         "locations_2_address_types_array_1": "source.locations_2_address_types_array_1",
+#         "locations_2_address_address_components_array_0_long_name": "source.locations_2_address_address_components_array_0_long_name",
+#         "locations_2_address_address_components_array_1_long_name": "source.locations_2_address_address_components_array_1_long_name",
+#         "locations_2_address_address_components_array_2_long_name": "source.locations_2_address_address_components_array_2_long_name",
+#         "locations_2_address_address_components_array_3_long_name": "source.locations_2_address_address_components_array_3_long_name",
+#         "locations_2_address_address_components_array_4_long_name": "source.locations_2_address_address_components_array_4_long_name",
+#         "locations_2_address_address_components_array_5_long_name": "source.locations_2_address_address_components_array_5_long_name",
+#         "locations_2_address_address_components_array_6_long_name": "source.locations_2_address_address_components_array_6_long_name",
+#         "locations_2_address_address_components_array_0_short_name": "source.locations_2_address_address_components_array_0_short_name",
+#         "locations_2_address_address_components_array_1_short_name": "source.locations_2_address_address_components_array_1_short_name",
+#         "locations_2_address_address_components_array_2_short_name": "source.locations_2_address_address_components_array_2_short_name",
+#         "locations_2_address_address_components_array_3_short_name": "source.locations_2_address_address_components_array_3_short_name",
+#         "locations_2_address_address_components_array_4_short_name": "source.locations_2_address_address_components_array_4_short_name",
+#         "locations_2_address_address_components_array_5_short_name": "source.locations_2_address_address_components_array_5_short_name",
+#         "locations_2_address_address_components_array_6_short_name": "source.locations_2_address_address_components_array_6_short_name",
+#         "locations_2_address_address_components_array_0_types_0": "source.locations_2_address_address_components_array_0_types_0",
+#         "locations_2_address_address_components_array_0_types_1": "source.locations_2_address_address_components_array_0_types_1",
+#         "locations_2_address_address_components_array_1_types_0": "source.locations_2_address_address_components_array_1_types_0",
+#         "locations_2_address_address_components_array_1_types_1": "source.locations_2_address_address_components_array_1_types_1",
+#         "locations_2_address_address_components_array_2_types_0": "source.locations_2_address_address_components_array_2_types_0",
+#         "locations_2_address_address_components_array_2_types_1": "source.locations_2_address_address_components_array_2_types_1",
+#         "locations_2_address_address_components_array_3_types_0": "source.locations_2_address_address_components_array_3_types_0",
+#         "locations_2_address_address_components_array_3_types_1": "source.locations_2_address_address_components_array_3_types_1",
+#         "locations_2_address_address_components_array_4_types_0": "source.locations_2_address_address_components_array_4_types_0",
+#         "locations_2_address_address_components_array_4_types_1": "source.locations_2_address_address_components_array_4_types_1",
+#         "locations_2_address_address_components_array_5_types_0": "source.locations_2_address_address_components_array_5_types_0",
+#         "locations_2_address_address_components_array_5_types_1": "source.locations_2_address_address_components_array_5_types_1",
+#         "locations_2_address_address_components_array_6_types_0": "source.locations_2_address_address_components_array_6_types_0",
+#         "locations_3_address_formatted_address": "source.locations_3_address_formatted_address",
+#         "locations_3_address_place_id": "source.locations_3_address_place_id",
+#         "locations_3_address_location_type": "source.locations_3_address_location_type",
+#         "locations_3_address_latitude": "source.locations_3_address_latitude",
+#         "locations_3_address_longitude": "source.locations_3_address_longitude",
+#         "locations_3_address_viewport_northeast_latitude": "source.locations_3_address_viewport_northeast_latitude",
+#         "locations_3_address_viewport_northeast_longitude": "source.locations_3_address_viewport_northeast_longitude",
+#         "locations_3_address_viewport_southwest_latitude": "source.locations_3_address_viewport_southwest_latitude",
+#         "locations_3_address_viewport_southwest_longitude": "source.locations_3_address_viewport_southwest_longitude",
+#         "locations_3_address_bounds_northeast_latitude": "source.locations_3_address_bounds_northeast_latitude",
+#         "locations_3_address_bounds_northeast_longitude": "source.locations_3_address_bounds_northeast_longitude",
+#         "locations_3_address_bounds_southwest_latitude": "source.locations_3_address_bounds_southwest_latitude",
+#         "locations_3_address_bounds_southwest_longitude": "source.locations_3_address_bounds_southwest_longitude",
+#         "locations_3_address_types_array_0": "source.locations_3_address_types_array_0",
+#         "locations_3_address_types_array_1": "source.locations_3_address_types_array_1",
+#         "locations_3_address_address_components_array_0_long_name": "source.locations_3_address_address_components_array_0_long_name",
+#         "locations_3_address_address_components_array_1_long_name": "source.locations_3_address_address_components_array_1_long_name",
+#         "locations_3_address_address_components_array_2_long_name": "source.locations_3_address_address_components_array_2_long_name",
+#         "locations_3_address_address_components_array_0_short_name": "source.locations_3_address_address_components_array_0_short_name",
+#         "locations_3_address_address_components_array_1_short_name": "source.locations_3_address_address_components_array_1_short_name",
+#         "locations_3_address_address_components_array_2_short_name": "source.locations_3_address_address_components_array_2_short_name",
+#         "locations_3_address_address_components_array_0_types_0": "source.locations_3_address_address_components_array_0_types_0",
+#         "locations_3_address_address_components_array_0_types_1": "source.locations_3_address_address_components_array_0_types_1",
+#         "locations_3_address_address_components_array_1_types_0": "source.locations_3_address_address_components_array_1_types_0",
+#         "locations_3_address_address_components_array_1_types_1": "source.locations_3_address_address_components_array_1_types_1",
+#         "locations_3_address_address_components_array_2_types_0": "source.locations_3_address_address_components_array_2_types_0",
+#         "locations_3_address_address_components_array_2_types_1": "source.locations_3_address_address_components_array_2_types_1",
+#         "locations_4_address_formatted_address": "source.locations_4_address_formatted_address",
+#         "locations_4_address_place_id": "source.locations_4_address_place_id",
+#         "locations_4_address_location_type": "source.locations_4_address_location_type",
+#         "locations_4_address_latitude": "source.locations_4_address_latitude",
+#         "locations_4_address_longitude": "source.locations_4_address_longitude",
+#         "locations_4_address_viewport_northeast_latitude": "source.locations_4_address_viewport_northeast_latitude",
+#         "locations_4_address_viewport_northeast_longitude": "source.locations_4_address_viewport_northeast_longitude",
+#         "locations_4_address_viewport_southwest_latitude": "source.locations_4_address_viewport_southwest_latitude",
+#         "locations_4_address_viewport_southwest_longitude": "source.locations_4_address_viewport_southwest_longitude",
+#         "locations_4_address_bounds_northeast_latitude": "source.locations_4_address_bounds_northeast_latitude",
+#         "locations_4_address_bounds_northeast_longitude": "source.locations_4_address_bounds_northeast_longitude",
+#         "locations_4_address_bounds_southwest_latitude": "source.locations_4_address_bounds_southwest_latitude",
+#         "locations_4_address_bounds_southwest_longitude": "source.locations_4_address_bounds_southwest_longitude",
+#         "locations_4_address_types_array_0": "source.locations_4_address_types_array_0",
+#         "locations_4_address_types_array_1": "source.locations_4_address_types_array_1",
+#         "locations_4_address_address_components_array_0_long_name": "source.locations_4_address_address_components_array_0_long_name",
+#         "locations_4_address_address_components_array_1_long_name": "source.locations_4_address_address_components_array_1_long_name",
+#         "locations_4_address_address_components_array_2_long_name": "source.locations_4_address_address_components_array_2_long_name",
+#         "locations_4_address_address_components_array_0_short_name": "source.locations_4_address_address_components_array_0_short_name",
+#         "locations_4_address_address_components_array_1_short_name": "source.locations_4_address_address_components_array_1_short_name",
+#         "locations_4_address_address_components_array_2_short_name": "source.locations_4_address_address_components_array_2_short_name",
+#         "locations_4_address_address_components_array_0_types_0": "source.locations_4_address_address_components_array_0_types_0",
+#         "locations_4_address_address_components_array_0_types_1": "source.locations_4_address_address_components_array_0_types_1",
+#         "locations_4_address_address_components_array_1_types_0": "source.locations_4_address_address_components_array_1_types_0",
+#         "locations_4_address_address_components_array_1_types_1": "source.locations_4_address_address_components_array_1_types_1",
+#         "locations_4_address_address_components_array_2_types_0": "source.locations_4_address_address_components_array_2_types_0",
+#         "locations_4_address_address_components_array_2_types_1": "source.locations_4_address_address_components_array_2_types_1",
+#         "postedAt_Timestamp": "source.postedAt_Timestamp",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')",
 #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_company_locations.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 

@@ -75,36 +75,44 @@ df_job_requirements = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_job_requirements.write.format("delta").saveAsTable("jobposts_noblehire.job_requirements")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.job_requirements
+# df_job_requirements.write.format("delta").saveAsTable("jobposts_noblehire.job_requirements")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.job_requirements
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.job_requirements
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.job_requirements
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.job_requirements
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.job_requirements
-# MAGIC SET requirements_0_title = '300+ years of experience in automated testing.'
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.job_requirements
+# WHERE companyId = 1
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.job_requirements
+# SET requirements_0_title = '300+ years of experience in automated testing.'
+# WHERE companyId = 2
 
 # COMMAND ----------
 
@@ -206,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_job_requirements.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaJobRequirements.alias("target")
  .merge(
@@ -220,57 +238,48 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "id": "source.id",
-        "companyId": "source.companyId",
-        "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "requirements_0_icon": "source.requirements_0_icon",
-        "requirements_0_title": "source.requirements_0_title",
-        "requirements_1_icon": "source.requirements_1_icon",
-        "requirements_1_title": "source.requirements_1_title",
-        "requirements_2_icon": "source.requirements_2_icon",
-        "requirements_2_title": "source.requirements_2_title",
-        "requirements_3_icon": "source.requirements_3_icon",
-        "requirements_3_title": "source.requirements_3_title",
-        "requirements_4_icon": "source.requirements_4_icon",
-        "requirements_4_title": "source.requirements_4_title",
-        "requirements_5_icon": "source.requirements_5_icon",
-        "requirements_5_title": "source.requirements_5_title",
-        "requirements_6_icon": "source.requirements_6_icon",
-        "requirements_6_title": "source.requirements_6_title",
-        "requirements_7_icon": "source.requirements_7_icon",
-        "requirements_7_title": "source.requirements_7_title",
-        "requirements_8_icon": "source.requirements_8_icon",
-        "requirements_8_title": "source.requirements_8_title",
-        "requirements_9_icon": "source.requirements_9_icon",
-        "requirements_9_title": "source.requirements_9_title",
-        "requirements_10_icon": "source.requirements_10_icon",
-        "requirements_10_title": "source.requirements_10_title",
-        "requirements_11_icon": "source.requirements_11_icon",
-        "requirements_11_title": "source.requirements_11_title",
-        "requirements_12_icon": "source.requirements_12_icon",
-        "requirements_12_title": "source.requirements_12_title",
-        "requirements_13_icon": "source.requirements_13_icon",
-        "requirements_13_title": "source.requirements_13_title",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-#         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+        columns_dict
+#      {
+#         "id": "source.id",
+#         "companyId": "source.companyId",
+#         "postedAt_Timestamp": "source.postedAt_Timestamp",
+#         "requirements_0_icon": "source.requirements_0_icon",
+#         "requirements_0_title": "source.requirements_0_title",
+#         "requirements_1_icon": "source.requirements_1_icon",
+#         "requirements_1_title": "source.requirements_1_title",
+#         "requirements_2_icon": "source.requirements_2_icon",
+#         "requirements_2_title": "source.requirements_2_title",
+#         "requirements_3_icon": "source.requirements_3_icon",
+#         "requirements_3_title": "source.requirements_3_title",
+#         "requirements_4_icon": "source.requirements_4_icon",
+#         "requirements_4_title": "source.requirements_4_title",
+#         "requirements_5_icon": "source.requirements_5_icon",
+#         "requirements_5_title": "source.requirements_5_title",
+#         "requirements_6_icon": "source.requirements_6_icon",
+#         "requirements_6_title": "source.requirements_6_title",
+#         "requirements_7_icon": "source.requirements_7_icon",
+#         "requirements_7_title": "source.requirements_7_title",
+#         "requirements_8_icon": "source.requirements_8_icon",
+#         "requirements_8_title": "source.requirements_8_title",
+#         "requirements_9_icon": "source.requirements_9_icon",
+#         "requirements_9_title": "source.requirements_9_title",
+#         "requirements_10_icon": "source.requirements_10_icon",
+#         "requirements_10_title": "source.requirements_10_title",
+#         "requirements_11_icon": "source.requirements_11_icon",
+#         "requirements_11_title": "source.requirements_11_title",
+#         "requirements_12_icon": "source.requirements_12_icon",
+#         "requirements_12_title": "source.requirements_12_title",
+#         "requirements_13_icon": "source.requirements_13_icon",
+#         "requirements_13_title": "source.requirements_13_title",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_job_requirements.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 

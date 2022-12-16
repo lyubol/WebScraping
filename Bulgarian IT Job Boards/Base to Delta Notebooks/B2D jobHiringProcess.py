@@ -77,34 +77,42 @@ df_job_hiring_process = (
 # DBTITLE 1,Create Delta Table
 # This command has been ran just once, when the delta table was first created.
 
-df_job_hiring_process.write.format("delta").saveAsTable("jobposts_noblehire.job_hiring_process")
+# df_job_hiring_process.write.format("delta").saveAsTable("jobposts_noblehire.job_hiring_process")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.job_hiring_process
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.job_hiring_process
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.job_hiring_process
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.job_hiring_process
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.job_hiring_process
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.job_hiring_process
+# WHERE companyId = 1
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.job_hiring_process
-# MAGIC SET hiringProcessSteps_0 = 'No job hiring process'
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.job_hiring_process
+# SET hiringProcessSteps_0 = 'No job hiring process'
+# WHERE companyId = 2
 
 # COMMAND ----------
 
@@ -206,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_job_hiring_process.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaJobHiringProcess.alias("target")
  .merge(
@@ -220,35 +238,26 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "id": "source.id",
-        "companyId": "source.companyId",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "hiringProcessSteps_0": "source.hiringProcessSteps_0",
-        "hiringProcessSteps_1": "source.hiringProcessSteps_1",
-        "hiringProcessSteps_2": "source.hiringProcessSteps_2",
-        "hiringProcessSteps_3": "source.hiringProcessSteps_3",
-        "hiringProcessSteps_4": "source.hiringProcessSteps_4",
-        "hiringProcessSteps_5": "source.hiringProcessSteps_5",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+        columns_dict
+#      {
+#         "id": "source.id",
+#         "companyId": "source.companyId",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "postedAt_Timestamp": "source.postedAt_Timestamp",
+#         "hiringProcessSteps_0": "source.hiringProcessSteps_0",
+#         "hiringProcessSteps_1": "source.hiringProcessSteps_1",
+#         "hiringProcessSteps_2": "source.hiringProcessSteps_2",
+#         "hiringProcessSteps_3": "source.hiringProcessSteps_3",
+#         "hiringProcessSteps_4": "source.hiringProcessSteps_4",
+#         "hiringProcessSteps_5": "source.hiringProcessSteps_5",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
 #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_job_hiring_process.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 

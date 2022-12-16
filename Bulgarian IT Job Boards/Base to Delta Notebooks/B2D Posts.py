@@ -75,36 +75,44 @@ df_posts = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_posts.write.format("delta").saveAsTable("jobposts_noblehire.posts")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.posts
+# df_posts.write.format("delta").saveAsTable("jobposts_noblehire.posts")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.posts
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.posts
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.posts
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.posts
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.posts
-# MAGIC SET description = 'Old description'
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.posts
+# WHERE companyId = 1
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.posts
+# SET description = 'Old description'
+# WHERE companyId = 2
 
 # COMMAND ----------
 
@@ -206,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_posts.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaPosts.alias("target")
  .merge(
@@ -220,60 +238,51 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "id": "source.id",
-        "companyId": "source.companyId",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "businessTravelComment": "source.businessTravelComment",
-        "businessTraveling": "source.businessTraveling",
-        "customerFacing": "source.customerFacing",
-        "description": "source.description",
-        "fullyRemote": "source.fullyRemote",
-        "homeOfficeDays": "source.homeOfficeDays",
-        "homeOfficePer": "source.homeOfficePer",
-        "jobType": "source.jobType",
-        "jobTypeComment": "source.jobTypeComment",
-        "mainDatabase": "source.mainDatabase",
-        "offeringStock": "source.offeringStock",
-        "postedAt": "source.postedAt",
-        "primaryLanguage": "source.primaryLanguage",
-        "primaryPlatform": "source.primaryPlatform",
-        "productDescription": "source.productDescription",
-        "public": "source.public",
-        "role": "source.role",
-        "salaryCurrency": "source.salaryCurrency",
-        "salaryMax": "source.salaryMax",
-        "salaryMin": "source.salaryMin",
-        "salaryPeriod": "source.salaryPeriod",
-        "secondaryLanguage": "source.secondaryLanguage",
-        "secondaryPlatform": "source.secondaryPlatform",
-        "seniority": "source.seniority",
-        "slug": "source.slug",
-        "teamLead": "source.teamLead",
-        "teamLeadName": "source.teamLeadName",
-        "teamLeadRole": "source.teamLeadRole",
-        "teamSizeMax": "source.teamSizeMax",
-        "teamSizeMin": "source.teamSizeMin",
-        "title": "source.title",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-#         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+        columns_dict
+#      {
+#         "id": "source.id",
+#         "companyId": "source.companyId",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "postedAt_Timestamp": "source.postedAt_Timestamp",
+#         "businessTravelComment": "source.businessTravelComment",
+#         "businessTraveling": "source.businessTraveling",
+#         "customerFacing": "source.customerFacing",
+#         "description": "source.description",
+#         "fullyRemote": "source.fullyRemote",
+#         "homeOfficeDays": "source.homeOfficeDays",
+#         "homeOfficePer": "source.homeOfficePer",
+#         "jobType": "source.jobType",
+#         "jobTypeComment": "source.jobTypeComment",
+#         "mainDatabase": "source.mainDatabase",
+#         "offeringStock": "source.offeringStock",
+#         "postedAt": "source.postedAt",
+#         "primaryLanguage": "source.primaryLanguage",
+#         "primaryPlatform": "source.primaryPlatform",
+#         "productDescription": "source.productDescription",
+#         "public": "source.public",
+#         "role": "source.role",
+#         "salaryCurrency": "source.salaryCurrency",
+#         "salaryMax": "source.salaryMax",
+#         "salaryMin": "source.salaryMin",
+#         "salaryPeriod": "source.salaryPeriod",
+#         "secondaryLanguage": "source.secondaryLanguage",
+#         "secondaryPlatform": "source.secondaryPlatform",
+#         "seniority": "source.seniority",
+#         "slug": "source.slug",
+#         "teamLead": "source.teamLead",
+#         "teamLeadName": "source.teamLeadName",
+#         "teamLeadRole": "source.teamLeadRole",
+#         "teamSizeMax": "source.teamSizeMax",
+#         "teamSizeMin": "source.teamSizeMin",
+#         "title": "source.title",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_posts.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 

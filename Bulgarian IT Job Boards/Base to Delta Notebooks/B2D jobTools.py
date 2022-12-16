@@ -75,36 +75,44 @@ df_job_tools = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_job_tools.write.format("delta").saveAsTable("jobposts_noblehire.job_tools")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.job_tools
+# df_job_tools.write.format("delta").saveAsTable("jobposts_noblehire.job_tools")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.job_tools
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.job_tools
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.job_tools
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.job_tools
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.job_tools
-# MAGIC SET tools_0 = 'Not a real tool. It is a veggie for god sake.'
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.job_tools
+# WHERE companyId = 1
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.job_tools
+# SET tools_0 = 'Not a real tool. It is a veggie for god sake.'
+# WHERE companyId = 2
 
 # COMMAND ----------
 
@@ -206,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_job_tools.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaJobTools.alias("target")
  .merge(
@@ -220,49 +238,40 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "id": "source.id",
-        "companyId": "source.companyId",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "tools_0": "source.tools_0",
-        "tools_1": "source.tools_1",
-        "tools_2": "source.tools_2",
-        "tools_3": "source.tools_3",
-        "tools_4": "source.tools_4",
-        "tools_5": "source.tools_5",
-        "tools_6": "source.tools_6",
-        "tools_7": "source.tools_7",
-        "tools_8": "source.tools_8",
-        "tools_9": "source.tools_9",
-        "tools_10": "source.tools_10",
-        "tools_11": "source.tools_11",
-        "tools_12": "source.tools_12",
-        "tools_13": "source.tools_13",
-        "tools_14": "source.tools_14",
-        "tools_15": "source.tools_15",
-        "tools_16": "source.tools_16",
-        "tools_17": "source.tools_17",
-        "tools_18": "source.tools_18",
-        "tools_19": "source.tools_19",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+        columns_dict
+#      {
+#         "id": "source.id",
+#         "companyId": "source.companyId",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "postedAt_Timestamp": "source.postedAt_Timestamp",
+#         "tools_0": "source.tools_0",
+#         "tools_1": "source.tools_1",
+#         "tools_2": "source.tools_2",
+#         "tools_3": "source.tools_3",
+#         "tools_4": "source.tools_4",
+#         "tools_5": "source.tools_5",
+#         "tools_6": "source.tools_6",
+#         "tools_7": "source.tools_7",
+#         "tools_8": "source.tools_8",
+#         "tools_9": "source.tools_9",
+#         "tools_10": "source.tools_10",
+#         "tools_11": "source.tools_11",
+#         "tools_12": "source.tools_12",
+#         "tools_13": "source.tools_13",
+#         "tools_14": "source.tools_14",
+#         "tools_15": "source.tools_15",
+#         "tools_16": "source.tools_16",
+#         "tools_17": "source.tools_17",
+#         "tools_18": "source.tools_18",
+#         "tools_19": "source.tools_19",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
 #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_job_tools.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 

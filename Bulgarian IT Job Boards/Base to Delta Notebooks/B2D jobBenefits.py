@@ -75,36 +75,44 @@ df_job_benefits = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_job_benefits.write.format("delta").saveAsTable("jobposts_noblehire.job_benefits")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.job_benefits
+# df_job_benefits.write.format("delta").saveAsTable("jobposts_noblehire.job_benefits")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.job_benefits
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.job_benefits
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.job_benefits
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.job_benefits
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.job_benefits
-# MAGIC SET benefits_0_title = 'Not a real benefit.'
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.job_benefits
+# WHERE companyId = 1
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.job_benefits
+# SET benefits_0_title = 'Not a real benefit.'
+# WHERE companyId = 2
 
 # COMMAND ----------
 
@@ -206,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_job_benefits.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaJobBenefits.alias("target")
  .merge(
@@ -220,91 +238,82 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "id": "source.id",
-        "companyId": "source.companyId",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "benefits_0_icon": "source.benefits_0_icon",
-        "benefits_0_title": "source.benefits_0_title",
-        "benefits_1_icon": "source.benefits_1_icon",
-        "benefits_1_title": "source.benefits_1_title",
-        "benefits_2_icon": "source.benefits_2_icon",
-        "benefits_2_title": "source.benefits_2_title",
-        "benefits_3_icon": "source.benefits_3_icon",
-        "benefits_3_title": "source.benefits_3_title",
-        "benefits_4_icon": "source.benefits_4_icon",
-        "benefits_4_title": "source.benefits_4_title",
-        "benefits_5_icon": "source.benefits_5_icon",
-        "benefits_5_title": "source.benefits_5_title",
-        "benefits_6_icon": "source.benefits_6_icon",
-        "benefits_6_title": "source.benefits_6_title",
-        "benefits_7_icon": "source.benefits_7_icon",
-        "benefits_7_title": "source.benefits_7_title",
-        "benefits_8_icon": "source.benefits_8_icon",
-        "benefits_8_title": "source.benefits_8_title",
-        "benefits_9_icon": "source.benefits_9_icon",
-        "benefits_9_title": "source.benefits_9_title",
-        "benefits_10_icon": "source.benefits_10_icon",
-        "benefits_10_title": "source.benefits_10_title",
-        "benefits_11_icon": "source.benefits_11_icon",
-        "benefits_11_title": "source.benefits_11_title",
-        "benefits_12_icon": "source.benefits_12_icon",
-        "benefits_12_title": "source.benefits_12_title",
-        "benefits_13_icon": "source.benefits_13_icon",
-        "benefits_13_title": "source.benefits_13_title",
-        "benefits_14_icon": "source.benefits_14_icon",
-        "benefits_14_title": "source.benefits_14_title",
-        "benefits_15_icon": "source.benefits_15_icon",
-        "benefits_15_title": "source.benefits_15_title",
-        "benefits_16_icon": "source.benefits_16_icon",
-        "benefits_16_title": "source.benefits_16_title",
-        "benefits_17_icon": "source.benefits_17_icon",
-        "benefits_17_title": "source.benefits_17_title",
-        "benefits_18_icon": "source.benefits_18_icon",
-        "benefits_18_title": "source.benefits_18_title",
-        "benefits_19_icon": "source.benefits_19_icon",
-        "benefits_19_title": "source.benefits_19_title",
-        "benefits_20_icon": "source.benefits_20_icon",
-        "benefits_20_title": "source.benefits_20_title",
-        "benefits_21_icon": "source.benefits_21_icon",
-        "benefits_21_title": "source.benefits_21_title",
-        "benefits_22_icon": "source.benefits_22_icon",
-        "benefits_22_title": "source.benefits_22_title",
-        "benefits_23_icon": "source.benefits_23_icon",
-        "benefits_23_title": "source.benefits_23_title",
-        "benefits_24_icon": "source.benefits_24_icon",
-        "benefits_24_title": "source.benefits_24_title",
-        "benefits_25_icon": "source.benefits_25_icon",
-        "benefits_25_title": "source.benefits_25_title",
-        "benefits_26_icon": "source.benefits_26_icon",
-        "benefits_26_title": "source.benefits_26_title",
-        "benefits_27_icon": "source.benefits_27_icon",
-        "benefits_27_title": "source.benefits_27_title",
-        "benefits_28_icon": "source.benefits_28_icon",
-        "benefits_28_title": "source.benefits_28_title",
-        "benefits_29_icon": "source.benefits_29_icon",
-        "benefits_29_title": "source.benefits_29_title",
-        "benefits_30_icon": "source.benefits_30_icon",
-        "benefits_30_title": "source.benefits_30_title",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+        columns_dict
+#      {
+#         "id": "source.id",
+#         "companyId": "source.companyId",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "postedAt_Timestamp": "source.postedAt_Timestamp",
+#         "benefits_0_icon": "source.benefits_0_icon",
+#         "benefits_0_title": "source.benefits_0_title",
+#         "benefits_1_icon": "source.benefits_1_icon",
+#         "benefits_1_title": "source.benefits_1_title",
+#         "benefits_2_icon": "source.benefits_2_icon",
+#         "benefits_2_title": "source.benefits_2_title",
+#         "benefits_3_icon": "source.benefits_3_icon",
+#         "benefits_3_title": "source.benefits_3_title",
+#         "benefits_4_icon": "source.benefits_4_icon",
+#         "benefits_4_title": "source.benefits_4_title",
+#         "benefits_5_icon": "source.benefits_5_icon",
+#         "benefits_5_title": "source.benefits_5_title",
+#         "benefits_6_icon": "source.benefits_6_icon",
+#         "benefits_6_title": "source.benefits_6_title",
+#         "benefits_7_icon": "source.benefits_7_icon",
+#         "benefits_7_title": "source.benefits_7_title",
+#         "benefits_8_icon": "source.benefits_8_icon",
+#         "benefits_8_title": "source.benefits_8_title",
+#         "benefits_9_icon": "source.benefits_9_icon",
+#         "benefits_9_title": "source.benefits_9_title",
+#         "benefits_10_icon": "source.benefits_10_icon",
+#         "benefits_10_title": "source.benefits_10_title",
+#         "benefits_11_icon": "source.benefits_11_icon",
+#         "benefits_11_title": "source.benefits_11_title",
+#         "benefits_12_icon": "source.benefits_12_icon",
+#         "benefits_12_title": "source.benefits_12_title",
+#         "benefits_13_icon": "source.benefits_13_icon",
+#         "benefits_13_title": "source.benefits_13_title",
+#         "benefits_14_icon": "source.benefits_14_icon",
+#         "benefits_14_title": "source.benefits_14_title",
+#         "benefits_15_icon": "source.benefits_15_icon",
+#         "benefits_15_title": "source.benefits_15_title",
+#         "benefits_16_icon": "source.benefits_16_icon",
+#         "benefits_16_title": "source.benefits_16_title",
+#         "benefits_17_icon": "source.benefits_17_icon",
+#         "benefits_17_title": "source.benefits_17_title",
+#         "benefits_18_icon": "source.benefits_18_icon",
+#         "benefits_18_title": "source.benefits_18_title",
+#         "benefits_19_icon": "source.benefits_19_icon",
+#         "benefits_19_title": "source.benefits_19_title",
+#         "benefits_20_icon": "source.benefits_20_icon",
+#         "benefits_20_title": "source.benefits_20_title",
+#         "benefits_21_icon": "source.benefits_21_icon",
+#         "benefits_21_title": "source.benefits_21_title",
+#         "benefits_22_icon": "source.benefits_22_icon",
+#         "benefits_22_title": "source.benefits_22_title",
+#         "benefits_23_icon": "source.benefits_23_icon",
+#         "benefits_23_title": "source.benefits_23_title",
+#         "benefits_24_icon": "source.benefits_24_icon",
+#         "benefits_24_title": "source.benefits_24_title",
+#         "benefits_25_icon": "source.benefits_25_icon",
+#         "benefits_25_title": "source.benefits_25_title",
+#         "benefits_26_icon": "source.benefits_26_icon",
+#         "benefits_26_title": "source.benefits_26_title",
+#         "benefits_27_icon": "source.benefits_27_icon",
+#         "benefits_27_title": "source.benefits_27_title",
+#         "benefits_28_icon": "source.benefits_28_icon",
+#         "benefits_28_title": "source.benefits_28_title",
+#         "benefits_29_icon": "source.benefits_29_icon",
+#         "benefits_29_title": "source.benefits_29_title",
+#         "benefits_30_icon": "source.benefits_30_icon",
+#         "benefits_30_title": "source.benefits_30_title",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
 #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_job_benefits.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 

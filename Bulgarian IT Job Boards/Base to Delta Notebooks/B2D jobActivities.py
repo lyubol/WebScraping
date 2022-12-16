@@ -75,36 +75,44 @@ df_job_activities = (
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_job_activities.write.format("delta").saveAsTable("jobposts_noblehire.job_activities")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC SELECT * FROM jobposts_noblehire.job_activities
+# df_job_activities.write.format("delta").saveAsTable("jobposts_noblehire.job_activities")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE jobposts_noblehire.job_activities
+# Command used for testing purposes
+
+# %sql
+
+# SELECT * FROM jobposts_noblehire.job_activities
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC DELETE FROM jobposts_noblehire.job_activities
-# MAGIC WHERE companyId = 1
+# Command used for testing purposes
+
+# %sql
+
+# DROP TABLE jobposts_noblehire.job_activities
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC UPDATE jobposts_noblehire.job_activities
-# MAGIC SET activities_0_title = 'Writing high-quality code is enough.'
-# MAGIC WHERE companyId = 2
+# Command used for testing purposes
+
+# %sql
+
+# DELETE FROM jobposts_noblehire.job_activities
+# WHERE companyId = 1
+
+# COMMAND ----------
+
+# Command used for testing purposes
+
+# %sql
+
+# UPDATE jobposts_noblehire.job_activities
+# SET activities_0_title = 'Writing high-quality code is enough.'
+# WHERE companyId = 2
 
 # COMMAND ----------
 
@@ -206,6 +214,16 @@ scdDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Dictionary which will be used in the Merge Command
+columns_dict = {col: "source." + col for col in df_job_activities.columns}
+columns_dict["IsActive"] = "'True'"
+columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+
+columns_dict
+
+# COMMAND ----------
+
 # DBTITLE 1,Merge
 (deltaJobActivities.alias("target")
  .merge(
@@ -220,43 +238,34 @@ scdDF.display()
     }
  )
  .whenNotMatchedInsert(values =
-#         columns_dict
-     {
-        "id": "source.id",
-        "companyId": "source.companyId",
-        "Source": "source.Source",
-        "IngestionDate": "source.IngestionDate",
-        "postedAt_Timestamp": "source.postedAt_Timestamp",
-        "activities_0_timePercents": "source.activities_0_timePercents",
-        "activities_0_title": "source.activities_0_title",
-        "activities_1_timePercents": "source.activities_1_timePercents",
-        "activities_1_title": "source.activities_1_title",
-        "activities_2_timePercents": "source.activities_2_timePercents",
-        "activities_2_title": "source.activities_2_title",
-        "activities_3_timePercents": "source.activities_3_timePercents",
-        "activities_3_title": "source.activities_3_title",
-        "activities_4_timePercents": "source.activities_4_timePercents",
-        "activities_4_title": "source.activities_4_title",
-        "activities_5_timePercents": "source.activities_5_timePercents",
-        "activities_5_title": "source.activities_5_title",
-        "activities_6_timePercents": "source.activities_6_timePercents",
-        "activities_6_title": "source.activities_6_title",
-        "IsActive": "'True'",
-        "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-#         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+        columns_dict
+#      {
+#         "id": "source.id",
+#         "companyId": "source.companyId",
+#         "Source": "source.Source",
+#         "IngestionDate": "source.IngestionDate",
+#         "postedAt_Timestamp": "source.postedAt_Timestamp",
+#         "activities_0_timePercents": "source.activities_0_timePercents",
+#         "activities_0_title": "source.activities_0_title",
+#         "activities_1_timePercents": "source.activities_1_timePercents",
+#         "activities_1_title": "source.activities_1_title",
+#         "activities_2_timePercents": "source.activities_2_timePercents",
+#         "activities_2_title": "source.activities_2_title",
+#         "activities_3_timePercents": "source.activities_3_timePercents",
+#         "activities_3_title": "source.activities_3_title",
+#         "activities_4_timePercents": "source.activities_4_timePercents",
+#         "activities_4_title": "source.activities_4_title",
+#         "activities_5_timePercents": "source.activities_5_timePercents",
+#         "activities_5_title": "source.activities_5_title",
+#         "activities_6_timePercents": "source.activities_6_timePercents",
+#         "activities_6_title": "source.activities_6_title",
+#         "IsActive": "'True'",
+#         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
+# #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
+#      }
  )
  .execute()
 )
-
-# COMMAND ----------
-
-columns_dict = {col: "source." + col for col in df_job_activities.columns}
-columns_dict["IsActive"] = "'True'"
-columns_dict["StartDate"] = "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
-# columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-
-columns_dict
 
 # COMMAND ----------
 
