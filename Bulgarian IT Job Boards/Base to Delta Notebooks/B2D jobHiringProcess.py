@@ -65,12 +65,12 @@ sourceDF.display()
 # DBTITLE 1,Add SCD Type 2 Columns to Delta Table
 # This command has been ran just once, when the delta table was first created.
 
-df_job_hiring_process = (
-    df_job_hiring_process
-    .withColumn("IsActive", lit(True))
-    .withColumn("StartDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
-    .withColumn("EndDate", lit(None).cast(StringType()))
-)
+# df_job_hiring_process = (
+#     df_job_hiring_process
+#     .withColumn("IsActive", lit(True))
+#     .withColumn("StartDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
+#     .withColumn("EndDate", lit(None).cast(StringType()))
+# )
 
 # COMMAND ----------
 
@@ -254,7 +254,7 @@ columns_dict
 #         "IsActive": "'True'",
 #         "StartDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
 #         "EndDate": """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
-     }
+#      }
  )
  .execute()
 )
