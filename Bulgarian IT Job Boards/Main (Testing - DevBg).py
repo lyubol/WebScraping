@@ -11,15 +11,17 @@ from bs4 import BeautifulSoup
 # Class to scrape "https://dev.bg/"
 class scrape_devbg:
     
+
     def __init__(self):
         self.headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"}
         self.jobPostsURL = "https://dev.bg/company/jobs/"
         self.companyURL = "https://dev.bg/company/"
     
+
     # Scrape job posts by looking at the main page. 
-    # Link to the detailed job description page is also scraped and can be passed to the scrapeJobDescription method.
-    def scrapeJobPosts(self, department, technology, page, target_list):
-        fullJobPostsURL = self.jobPostsURL + technology + "/?_paged=" + str(page)
+    # Link to the detailed job description page is also scraped and can be passed to the scrapeJobDescription method to scrape each job's description.
+    def scrapeJobPosts(self, department, page, target_list):
+        fullJobPostsURL = self.jobPostsURL + department + "/?_paged=" + str(page)
         response = requests.get(fullJobPostsURL, self.headers)
         soup = BeautifulSoup(response.content, "html.parser")
         divs = soup.find_all("div", class_ = "job-list-item")
@@ -53,12 +55,12 @@ class scrape_devbg:
                 "uploaded": uploaded,
                 "salary": salary,
                 "department": department,
-                "technology": technology,
                 "link": link
             }
             target_list.append(job)
         return 
     
+
     # Scrape job description by passing a job posts link. Links are obtained by the scrapeJobPost method.
     def scrapeJobDescriptions(self, url, target_list):
         response = requests.get(url, self.headers)
@@ -76,6 +78,14 @@ class scrape_devbg:
             target_list.append(job_description)
         return 
     
+
+    # Scrape company data based on different categories and attributes. Each category and its attributes are provided below.
+    # select(locations) - locationsofia, locationplovdiv, locationvarna, locationburgas, locationruse;
+    # headquarters - v-balgaria, v-chuzhbina;
+    # employees - 1-9, 10-30, 31-70, 70
+    # company_activity - produktovi-kompanii, it-konsultirane, survis-kompanii, vnedrjavane-na-softuerni-sistemi
+    # paid_leave - 20-dni, 21-25-dni, 25-dni
+    # work_hours - iztsyalo-guvkavo, chastichno-guvkavo, fiksirano
     def scrapeCompany(self, category, attribute, target_list):
         fullCompanyURL = self.companyURL + category + "/" + attribute + "/"
         response = requests.get(fullCompanyURL, self.headers)
@@ -91,15 +101,11 @@ class scrape_devbg:
             # go over all companies and check if a company is in the list of premium companies or not
             for tag in a_other:
                 if tag["title"] in premium_companies:
-                    companies_dict = {
-                        tag["title"]: "premium"
-                    }
+                    temp_list = [tag["title"], "premium", attribute]
                 else:
-                    companies_dict = {
-                        tag["title"]: "non-premium"
-                    }
+                    temp_list = [tag["title"], "non-premium", attribute]
                 # append each company dictionary to the target list
-                target_list.append(companies_dict)
+                target_list.append(temp_list)
         # if extracting other company data
         else:
             a = soup.find_all("a", class_ = "mini-company-item")
@@ -107,26 +113,32 @@ class scrape_devbg:
                 target_list.append(tag["title"])
         return
         
-    # Returns the results per page
-    def getPageResults(self, technology, page):
-        fullJobPostsURL = self.jobPostsURL + technology + '/?_paged=' + str(page)
+
+    # Returns the results per page for job posts
+    def getPageResults(self, department, page):
+        # Pass job department and page number; 
+        # Get the number of results on the given page.
+        fullJobPostsURL = self.jobPostsURL + department + '/?_paged=' + str(page)
         response = requests.get(fullJobPostsURL, self.headers)
         soup = BeautifulSoup(response.content, "html.parser")
         divs = soup.find_all("div", class_ =  "job-list-item")
         return len(divs)
 
+
     # Returns the total count of pages, based on results per page != 0
-    def getPageCount(self, technology):
+    def getPageCount(self, department):
         page = 1
-        while self.getPageResults(technology, page) != 0:
+        while self.getPageResults(department, page) != 0:
             page += 1
         return page - 1
       
+
         
 # Class to scrape "https://noblehire.io/"        
 class scrape_Noblehire():
     url = "https://prod-noblehire-api-000001.appspot.com/job?"
     
+
     # Returns all posts for a given page as Pandas DataFrame
     def getPosts(self, page):
         page = f"&page={page}"
