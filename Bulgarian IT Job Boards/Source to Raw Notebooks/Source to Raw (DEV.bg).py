@@ -38,31 +38,23 @@ current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 els
 location_prefix = "/dbfs"
 main_path = "/mnt/adlslirkov/it-job-boards/DEV.bg/raw/"
 posts_path = f"posts/{current_year}/{current_month}/{current_day}/"
-posts_file_name = f"devbg-posts-{date.today()}.csv"
 descriptions_path = f"descriptions/{current_year}/{current_month}/{current_day}/"
-descriptions_file_name = f"devbg-descriptions-{current_day}.csv"
 company_location_path = f"companyLocation/{current_year}/{current_month}/{current_day}/"
-company_location_file_name = f"devbg-company-location-{date.today()}.csv"
 company_headquarters_path = f"companyHeadquarters/{current_year}/{current_month}/{current_day}/"
-company_headquarters_file_name = f"devbg-company-headquarters-{date.today()}.csv"
 company_employees_count_path = f"companyEmployeesCount/{current_year}/{current_month}/{current_day}/"
-company_employees_count_file_name = f"devbg-company-employees-count-{date.today()}.csv"
 company_activity_path = f"companyActivity/{current_year}/{current_month}/{current_day}/"
-company_activity_file_name = f"devbg-company-activity-{date.today()}.csv"
 company_paid_leave_path = f"companyPaidLeave/{current_year}/{current_month}/{current_day}/"
-company_paid_leave_file_name = f"devbg-company-paid-leave-{date.today()}.csv"
 company_work_hours_path = f"companyWorkHours/{current_year}/{current_month}/{current_day}/"
-company_work_hours_file_name = f"devbg-company-work-hours-{date.today()}.csv"
 
 # Print RAW locations
-print(f"Posts path: {posts_path}; Posts file name: {posts_file_name}")
-print(f"Descriptions path: {descriptions_path}; Descriptions file name: {descriptions_file_name}")
-print(f"Company location path: {company_location_path}; Company location file name: {company_location_file_name}")
-print(f"Company headquarters path: {company_headquarters_path}; Company headquarters file name: {company_headquarters_file_name}")
-print(f"Company employees count path: {company_employees_count_path}; Company employees count file name: {company_employees_count_file_name}")
-print(f"Company activity path: {company_activity_path}; Company activity file name: {company_activity_file_name}")
-print(f"Company paid leave path: {company_paid_leave_path}; Company paid leave file name: {company_paid_leave_file_name}")
-print(f"Company work hours path: {company_work_hours_path}; Company work hours file name: {company_work_hours_file_name}")
+print(f"Posts path: {posts_path}")
+print(f"Descriptions path: {descriptions_path}")
+print(f"Company location path: {company_location_path}")
+print(f"Company headquarters path: {company_headquarters_path}")
+print(f"Company employees count path: {company_employees_count_path}")
+print(f"Company activity path: {company_activity_path}")
+print(f"Company paid leave path: {company_paid_leave_path}")
+print(f"Company work hours path: {company_work_hours_path}")
 
 # COMMAND ----------
 
@@ -115,19 +107,19 @@ workHoursFiksirano = []
 # COMMAND ----------
 
 # DBTITLE 1,Scrape job posts
-# # Execute scrapeJobPosts for all departments and all pages
-# for department in departments:
-#     for page in range(1, scraper.getPageCount(department) + 1):
-#         scraper.scrapeJobPosts(department, page, jobPosts)
-#         print(f"Scraping page {page} of department {department}...")
+# Execute scrapeJobPosts for all departments and all pages
+for department in departments:
+    for page in range(1, scraper.getPageCount(department) + 1):
+        scraper.scrapeJobPosts(department, page, jobPosts)
+        print(f"Scraping page {page} of department {department}...")
 
-# # Create job posts DataFrame    
-# df_jobposts = spark.createDataFrame(jobPosts)
+# Create job posts DataFrame    
+df_jobposts = spark.createDataFrame(jobPosts)
 
 # COMMAND ----------
 
 # DBTITLE 1,Scrape job descriptions
-# # Execute scrapeJobDescription for all job post links scraped by the above command
+# Execute scrapeJobDescription for all job post links scraped by the above command
 # for job in jobPosts:
 #     scraper.scrapeJobDescriptions(url=job["link"], target_list = jobDescription)
 #     print(f"Scraping job descriptions in {department} department...")
@@ -278,61 +270,35 @@ df_companyworkhours = spark.createDataFrame(data=companyWorkHours, schema=["Comp
 
 # COMMAND ----------
 
-# df_companylocations.groupBy("Location").count().display()
-# df_companyheadquarters.groupBy("Headquarter").count().display()
-# df_employeescount.groupBy("EmployeesCount").count().display()
-# df_companyactivities.groupBy("Activity").count().display()
-# df_companypaidleaves.groupBy("PaidLeave").count().display()
-# df_companyworkhours.groupBy("WorkHours").count().display()
-
-# COMMAND ----------
-
 # DBTITLE 1,Write to ADLS (Raw)
-# Create target location
-dbutils.fs.mkdirs(main_path + posts_path)
-print(f"Created: {main_path + posts_path}")
-
 # Write the job posts DataFrame to ADLS, raw location
-df_jobposts.write.format("parquet").save(location_prefix + main_path + posts_path + posts_file_name)
-print(f"Job posts saved at: {location_prefix + main_path + posts_path + posts_file_name}")
+df_jobposts.write.format("parquet").save(main_path + posts_path)
+print(f"Job posts saved at: {main_path + posts_path}")
 
 # Write the job description DataFrame to ADLS, raw location
-df_jobdescriptions.write.format("parquet").save(location_prefix + main_path + posts_path + posts_file_name)
-print(f"Job descriptions saved at: {location_prefix + main_path + posts_path + posts_file_name}")
+# df_jobdescriptions.write.format("parquet").save(main_path + descriptions_path + descriptions_file_name)
+# print(f"Job descriptions saved at: {main_path + descriptions_path + descriptions_file_name}")
 
 # Write the company locations DataFrame to ADLS, raw location
-df_companylocations.write.format("parquet").save(location_prefix + main_path + posts_path + posts_file_name)
-print(f"Company locations saved at: {location_prefix + main_path + posts_path + posts_file_name}")
+df_companylocations.write.mode("overwrite").format("parquet").save(main_path + company_location_path)
+print(f"Company locations saved at: {main_path + company_location_path}")
 
 # Write the company headquarters DataFrame to ADLS, raw location
-df_companyheadquarters.write.format("parquet").save(location_prefix + main_path + posts_path + posts_file_name)
-print(f"Company headquarters saved at: {location_prefix + main_path + posts_path + posts_file_name}")
+df_companyheadquarters.write.mode("overwrite").format("parquet").save(main_path + company_headquarters_path)
+print(f"Company headquarters saved at: {main_path + company_headquarters_path}")
 
 # Write the company employees count DataFrame to ADLS, raw location
-df_employeescount.write.format("parquet").save(location_prefix + main_path + posts_path + posts_file_name)
-print(f"Company employees count saved at: {location_prefix + main_path + posts_path + posts_file_name}")
+df_employeescount.write.mode("overwrite").format("parquet").save(main_path + company_employees_count_path)
+print(f"Company employees count saved at: {main_path + company_employees_count_path}")
 
 # Write the company activities DataFrame to ADLS, raw location
-df_companyactivities.write.format("parquet").save(location_prefix + main_path + posts_path + posts_file_name)
-print(f"Company activities saved at: {location_prefix + main_path + posts_path + posts_file_name}")
+df_companyactivities.write.mode("overwrite").format("parquet").save(main_path + company_activity_path)
+print(f"Company activities saved at: {main_path + company_activity_path}")
 
 # Write the company paid leave DataFrame to ADLS, raw location
-df_companypaidleaves.write.format("parquet").save(location_prefix + main_path + posts_path + posts_file_name)
-print(f"Company paid leave saved at: {location_prefix + main_path + posts_path + posts_file_name}")
+df_companypaidleaves.write.mode("overwrite").format("parquet").save(main_path + company_paid_leave_path)
+print(f"Company paid leave saved at: {main_path + company_paid_leave_path}")
 
 # Write the company work hours DataFrame to ADLS, raw location
-df_companyworkhours.write.format("parquet").save(location_prefix + main_path + posts_path + posts_file_name)
-print(f"Company work hours saved at: {location_prefix + main_path + posts_path + posts_file_name}")
-
-# COMMAND ----------
-
-# DBTITLE 1,Write to ADLS
-# # Create target location
-# dbutils.fs.mkdirs(main_path + descriptions_path)
-
-# # Write the Descriptions DataFrame to ADLS, raw location
-# df_descriptions.to_csv(location_prefix + main_path + descriptions_path + descriptions_file_name)
-
-# COMMAND ----------
-
-# %run "lirkov/IT Job Boards/Raw to Base to Delta"
+df_companyworkhours.write.mode("overwrite").format("parquet").save(main_path + company_work_hours_path)
+print(f"Company work hours saved at: {main_path + company_work_hours_path}")
