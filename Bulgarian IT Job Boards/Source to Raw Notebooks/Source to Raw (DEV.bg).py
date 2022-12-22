@@ -253,13 +253,13 @@ scraper.scrapeCompany(category="work-hours", attribute="chastichno-guvkavo", tar
 scraper.scrapeCompany(category="work-hours", attribute="fiksirano", target_list=workHoursFiksirano)
 
 # Add company work hours to workHoursIztsyaloGuvkavo list
-workHoursIztsyaloGuvkavo = [[wa, "1-9"] for wa in workHoursIztsyaloGuvkavo]
+workHoursIztsyaloGuvkavo = [[wa, "iztsyalo-guvkavo"] for wa in workHoursIztsyaloGuvkavo]
 
 # Add company work hours to workHoursChastichnoGuvkavo list
-workHoursChastichnoGuvkavo = [[wa, "10-30"] for wa in workHoursChastichnoGuvkavo]
+workHoursChastichnoGuvkavo = [[wa, "chastichno-guvkavo"] for wa in workHoursChastichnoGuvkavo]
 
 # Add company work hours to workHoursFiksirano list
-workHoursFiksirano = [[wa, "31-70"] for wa in workHoursFiksirano]
+workHoursFiksirano = [[wa, "fiksirano"] for wa in workHoursFiksirano]
 
 # Append company work hours lists 
 companyWorkHours = []
