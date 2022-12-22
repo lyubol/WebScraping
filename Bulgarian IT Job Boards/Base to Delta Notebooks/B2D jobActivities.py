@@ -1,9 +1,4 @@
 # Databricks notebook source
-# MAGIC %md
-# MAGIC ### This notebook is in progress and is currently used for testing the implementation of SCD Type 2
-
-# COMMAND ----------
-
 # DBTITLE 1,Imports
 from datetime import date
 import time
