@@ -58,7 +58,7 @@ sourceDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
 # df_company.write.format("delta").saveAsTable("jobposts_devbg.company")
 
@@ -76,10 +76,6 @@ deltaCompany = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/DEV.bg/d
 
 targetDF = deltaCompany.toDF()
 targetDF.display()
-
-# COMMAND ----------
-
-[f'targetDF.{c}.alias("target_{c}")' for c in targetDF.columns]
 
 # COMMAND ----------
 
@@ -109,17 +105,17 @@ joinDF = (
         targetDF.Locationvarna.alias("target_Locationvarna"),
         targetDF.V_Balgaria.alias("target_V_Balgaria"),
         targetDF.V_Chuzhbina.alias("target_V_Chuzhbina"),
-        targetDF["1_9"].alias("target_1_9"),
-        targetDF["10_30"].alias("target_10_30"),
-        targetDF["31_70"].alias("target_31_70"),
-        targetDF["70"].alias("target_70"),
+        targetDF["Employees_1_9"].alias("target_Employees_1_9"),
+        targetDF["Employees_10_30"].alias("target_Employees_10_30"),
+        targetDF["Employees_31_70"].alias("target_Employees_31_70"),
+        targetDF["Employees_70"].alias("target_Employees_70"),
         targetDF.It_Konsultirane.alias("target_It_Konsultirane"),
         targetDF.Produktovi_Kompanii.alias("target_Produktovi_Kompanii"),
         targetDF.Survis_Kompanii.alias("target_Survis_Kompanii"),
         targetDF.Vnedrjavane_Na_Softuerni_Sistemi.alias("target_Vnedrjavane_Na_Softuerni_Sistemi"),
-        targetDF["20_Dni"].alias("target_20_Dni"),
-        targetDF["21_25_Dni"].alias("target_21_25_Dni"),
-        targetDF["25_Dni"].alias("target_25_Dni"),
+        targetDF["Dni_20"].alias("target_Dni_20"),
+        targetDF["Dni_21_25"].alias("target_Dni_21_25"),
+        targetDF["Dni_25"].alias("target_Dni_25"),
         targetDF.Chastichno_Guvkavo.alias("target_Chastichno_Guvkavo"),
         targetDF.Fiksirano.alias("target_Fiksirano"),
         targetDF.Iztsyalo_Guvkavo.alias("target_Iztsyalo_Guvkavo"),
@@ -177,7 +173,34 @@ columns_dict
     }
  )
  .whenNotMatchedInsert(values =
-        columns_dict
+        {
+             'Company': 'source.Company',
+             'Locationburgas': 'source.Locationburgas',
+             'Locationplovdiv': 'source.Locationplovdiv',
+             'Locationruse': 'source.Locationruse',
+             'Locationsofia': 'source.Locationsofia',
+             'Locationvarna': 'source.Locationvarna',
+             'V_Balgaria': 'source.V_Balgaria',
+             'V_Chuzhbina': 'source.V_Chuzhbina',
+             'Employees_1_9': 'source.Employees_1_9',
+             'Employees_10_30': 'source.Employees_10_30',
+             'Employees_31_70': 'source.Employees_31_70',
+             'Employees_70': 'source.Employees_70',
+             'It_Konsultirane': 'source.It_Konsultirane',
+             'Produktovi_Kompanii': 'source.Produktovi_Kompanii',
+             'Survis_Kompanii': 'source.Survis_Kompanii',
+             'Vnedrjavane_Na_Softuerni_Sistemi': 'source.Vnedrjavane_Na_Softuerni_Sistemi',
+             'Dni_20': 'source.Dni_20',
+             'Dni_21_25': 'source.Dni_21_25',
+             'Dni_25': 'source.Dni_25',
+             'Chastichno_Guvkavo': 'source.Chastichno_Guvkavo',
+             'Fiksirano': 'source.Fiksirano',
+             'Iztsyalo_Guvkavo': 'source.Iztsyalo_Guvkavo',
+             'Source': 'source.Source',
+             'IngestionDate': 'source.IngestionDate',
+             'IsActive': "'True'",
+             'StartDate': 'current_timestamp'
+        }
  )
  .execute()
 )
