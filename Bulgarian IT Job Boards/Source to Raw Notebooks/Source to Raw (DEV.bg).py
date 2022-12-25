@@ -174,16 +174,16 @@ scraper.scrapeCompany(category="it-employees", attribute="31-70", target_list=em
 scraper.scrapeCompany(category="it-employees", attribute="70", target_list=employees70)
 
 # Add employees count to employees1_9 list
-employees1_9 = [[ec, "1-9"] for ec in employees1_9]
+employees1_9 = [[ec, "employees_1-9"] for ec in employees1_9]
 
 # Add employees count to employees10_30 list
-employees10_30 = [[ec, "10-30"] for ec in employees10_30]
+employees10_30 = [[ec, "employees_10-30"] for ec in employees10_30]
 
 # Add employees count to employees31_70 list
-employees31_70 = [[ec, "31-70"] for ec in employees31_70]
+employees31_70 = [[ec, "employees_31-70"] for ec in employees31_70]
 
 # Add employees count to employees70 list
-employees70 = [[ec, "70"] for ec in employees70]
+employees70 = [[ec, "employees_70"] for ec in employees70]
 
 # Append employees count lists 
 employeesCount = []
@@ -202,16 +202,16 @@ scraper.scrapeCompany(category="company-activity", attribute="survis-kompanii", 
 scraper.scrapeCompany(category="company-activity", attribute="vnedrjavane-na-softuerni-sistemi", target_list=activityVnedrjavaneNaSoftuerniSistemi)
 
 # Add company activity to activityProduktoviKompanii list
-activityProduktoviKompanii = [[a, "1-9"] for a in activityProduktoviKompanii]
+activityProduktoviKompanii = [[a, "produktovi-kompanii"] for a in activityProduktoviKompanii]
 
 # Add company activity to activityItKonsultirane list
-activityItKonsultirane = [[a, "10-30"] for a in activityItKonsultirane]
+activityItKonsultirane = [[a, "it-konsultirane"] for a in activityItKonsultirane]
 
 # Add company activity to activitySurvisKompanii list
-activitySurvisKompanii = [[a, "31-70"] for a in activitySurvisKompanii]
+activitySurvisKompanii = [[a, "survis-kompanii"] for a in activitySurvisKompanii]
 
 # Add company activity to activityVnedrjavaneNaSoftuerniSistemi list
-activityVnedrjavaneNaSoftuerniSistemi = [[a, "70"] for a in activityVnedrjavaneNaSoftuerniSistemi]
+activityVnedrjavaneNaSoftuerniSistemi = [[a, "vnedrjavane-na-softuerni-sistemi"] for a in activityVnedrjavaneNaSoftuerniSistemi]
 
 # Append company activities lists 
 companyActivities = []
@@ -229,13 +229,13 @@ scraper.scrapeCompany(category="paid-leave", attribute="21-25-dni", target_list=
 scraper.scrapeCompany(category="paid-leave", attribute="25-dni", target_list=paidLeave25)
 
 # Add company paid leaves to paidLeave20 list
-paidLeave20 = [[pl, "20-dni"] for pl in paidLeave20]
+paidLeave20 = [[pl, "dni_20"] for pl in paidLeave20]
 
 # Add company paid leaves to leave_21_25 list
-paidLeave21_25 = [[pl, "21-25-dni"] for pl in paidLeave21_25]
+paidLeave21_25 = [[pl, "dni_21-25"] for pl in paidLeave21_25]
 
 # Add company paid leaves to paidLeave25 list
-paidLeave25 = [[pl, "25-dni"] for pl in paidLeave25]
+paidLeave25 = [[pl, "dni_25"] for pl in paidLeave25]
 
 # Append company paid leaves lists 
 companyPaidLeaves = []
@@ -302,3 +302,7 @@ print(f"Company paid leave saved at: {main_path + company_paid_leave_path}")
 # Write the company work hours DataFrame to ADLS, raw location
 df_companyworkhours.write.mode("overwrite").format("parquet").save(main_path + company_work_hours_path)
 print(f"Company work hours saved at: {main_path + company_work_hours_path}")
+
+# COMMAND ----------
+
+
