@@ -49,3 +49,7 @@ while len(posts.getPosts(page)) != 0:
             f.close()
     
     time.sleep(10)
+
+# COMMAND ----------
+
+
