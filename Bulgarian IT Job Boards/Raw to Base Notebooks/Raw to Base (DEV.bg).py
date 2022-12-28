@@ -108,10 +108,6 @@ df_company.write.format("parquet").mode("overwrite").save(f"{main_path_base + co
 
 # COMMAND ----------
 
-df_jobposts = spark.read.format("parquet").load("/mnt/adlslirkov/it-job-boards/DEV.bg/base/posts/2022/12/22/")
-
-# COMMAND ----------
-
 # DBTITLE 1,Add date and source columns
 df_jobposts = (df_jobposts
   .withColumn("Source", lit("Dev.bg"))
