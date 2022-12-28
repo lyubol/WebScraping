@@ -127,6 +127,10 @@ df_jobposts = (df_jobposts
 
 df_jobposts = df_jobposts.withColumn("HashKey", sha2(concat(*[c for c in df_jobposts.columns]), 256))
 
+# Raise error if column HashKey is null
+if df_jobposts.where(col("HashKey").isNull()).count() > 0:
+    raise Exception("Column HashKey contains null values.")
+
 df_jobposts.display()
 
 # COMMAND ----------
