@@ -108,11 +108,24 @@ df_company.write.format("parquet").mode("overwrite").save(f"{main_path_base + co
 
 # COMMAND ----------
 
-# DBTITLE 1,Add date and source columns
+# DBTITLE 1,Adjust column names
+df_jobposts = df_jobposts.toDF(*[c.title() for c in df_jobposts.columns])
+
+# COMMAND ----------
+
+# DBTITLE 1,Add date and source and columns
 df_jobposts = (df_jobposts
   .withColumn("Source", lit("Dev.bg"))
   .withColumn("IngestionDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
 ).distinct()
+
+# COMMAND ----------
+
+# DBTITLE 1,Add hash key column
+# Add sha2 hash column based on all columns within the job posts DataFrame.
+# This is done in order to create a unique column that can be used for joins in Base to Delta
+
+df_jobposts = df_jobposts.withColumn("HashKey", sha2(concat(*[c for c in df_jobposts.columns]), 256))
 
 df_jobposts.display()
 
