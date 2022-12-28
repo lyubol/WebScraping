@@ -39,9 +39,9 @@ sourceDF.display()
 # DBTITLE 1,Create Database
 # MAGIC %sql
 # MAGIC 
-# MAGIC CREATE DATABASE IF NOT EXISTS jobposts_devbg
-# MAGIC COMMENT 'This database holds job posts data coming from Dev.bg'
-# MAGIC LOCATION '/mnt/adlslirkov/it-job-boards/DEV.bg/delta/'
+# MAGIC -- CREATE DATABASE IF NOT EXISTS jobposts_devbg
+# MAGIC -- COMMENT 'This database holds job posts data coming from Dev.bg'
+# MAGIC -- LOCATION '/mnt/adlslirkov/it-job-boards/DEV.bg/delta/'
 
 # COMMAND ----------
 
@@ -64,9 +64,16 @@ sourceDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Add Delta Table Constraint
 # MAGIC %sql
 # MAGIC 
-# MAGIC SELECT * FROM jobposts_devbg.posts
+# MAGIC -- ALTER TABLE jobposts_devbg.posts ADD CONSTRAINT HashKeyNotNull CHECK (HashKey IS NOT NULL);
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC 
+# MAGIC SELECT COUNT(*) FROM jobposts_devbg.posts
 # MAGIC -- DROP TABLE jobposts_devbg.posts
 
 # COMMAND ----------
@@ -91,19 +98,20 @@ joinDF = (
     sourceDF
     .join(
         targetDF, 
-        (sourceDF.link == targetDF.link),
+        (sourceDF.HashKey == targetDF.HashKey),
 #         & (targetDF.IsActive == "true"),
         "leftouter"
     )
     .select(
         sourceDF["*"],
-        targetDF.company.alias("target_company"),
-        targetDF.department.alias("target_department"),
-        targetDF.link.alias("target_link"),
-        targetDF.location.alias("target_location"),
-        targetDF.salary.alias("target_salary"),
-        targetDF.title.alias("target_title"),
-        targetDF.uploaded.alias("target_uploaded"),
+        targetDF.HashKey.alias("target_HashKey"),
+        targetDF.Company.alias("target_Company"),
+        targetDF.Department.alias("target_Department"),
+        targetDF.Link.alias("target_Link"),
+        targetDF.Location.alias("target_Location"),
+        targetDF.Salary.alias("target_Salary"),
+        targetDF.Title.alias("target_Title"),
+        targetDF.Uploaded.alias("target_Uploaded"),
         targetDF.Source.alias("target_Source"),
         targetDF.IngestionDate.alias("target_IngestionDate")
     )
@@ -114,14 +122,14 @@ joinDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Hash source and target columns and compare them
-filterDF = joinDF.filter(xxhash64(*[col for col in joinDF.columns if col.startswith("target") == False and "IngestionDate" not in col]) != xxhash64(*[col for col in joinDF.columns if col.startswith("target") == True and "IngestionDate" not in col])).withColumn("MergeKey", col("link"))
+filterDF = joinDF.filter(xxhash64("HashKey") != xxhash64("target_HashKey")).withColumn("MergeKey", col("target_HashKey"))
 
 filterDF.display()
 
 # COMMAND ----------
 
 # DBTITLE 1,Add MergeKey and set it to null where Id is not null
-dummyDF = filterDF.filter(col("target_link").isNotNull()).withColumn("MergeKey", lit(None))
+dummyDF = filterDF.filter(col("target_HashKey").isNotNull()).withColumn("MergeKey", lit(None))
 
 dummyDF.display()
 
@@ -148,7 +156,7 @@ columns_dict
 (deltaPosts.alias("target")
  .merge(
      scdDF.alias("source"),
-     "target.Company = source.MergeKey"
+     "target.HashKey = source.MergeKey"
  )
  .whenMatchedUpdate(set = 
     {
@@ -159,13 +167,14 @@ columns_dict
  )
  .whenNotMatchedInsert(values =
         {
-             'company': 'source.company',
-             'department': 'source.department',
-             'link': 'source.link',
-             'location': 'source.location',
-             'salary': 'source.salary',
-             'title': 'source.title',
-             'uploaded': 'source.uploaded',
+             'HashKey': 'source.HashKey',
+             'company': 'source.Company',
+             'department': 'source.Department',
+             'link': 'source.Link',
+             'location': 'source.Location',
+             'salary': 'source.Salary',
+             'title': 'source.Title',
+             'uploaded': 'source.Uploaded',
              'Source': 'source.Source',
              'IngestionDate': 'source.IngestionDate',
              'IsActive': "'True'",
@@ -179,3 +188,7 @@ columns_dict
 
 # DBTITLE 1,Check Delta Table History
 deltaPosts.history().display()
+
+# COMMAND ----------
+
+
