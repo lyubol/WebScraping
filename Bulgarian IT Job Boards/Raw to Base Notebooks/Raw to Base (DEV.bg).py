@@ -4,7 +4,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Define variables
-# Date variables 
+''# Date variables 
 current_year = date.today().year
 current_month = "0" + str(date.today().month) if len(str(date.today().month)) == 1 else date.today().month
 current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 else date.today().day
@@ -125,7 +125,7 @@ df_jobposts = (df_jobposts
 # Add sha2 hash column based on all columns within the job posts DataFrame.
 # This is done in order to create a unique column that can be used for joins in Base to Delta
 
-df_jobposts = df_jobposts.withColumn("HashKey", sha2(concat(*[c for c in df_jobposts.columns]), 256))
+df_jobposts = df_jobposts.withColumn("HashKey", sha2(concat(*[c for c in df_jobposts.columns if "IngestionDate" not in c]), 256))
 
 # Raise error if column HashKey is null
 if df_jobposts.where(col("HashKey").isNull()).count() > 0:
@@ -152,3 +152,7 @@ df_jobposts.display()
 # DBTITLE 1,Write to Base
 df_jobposts.distinct().write.format("parquet").mode("overwrite").save(f"{main_path_base + posts_path}")
 # df_jobdescriptions.write.format("parquet").mode("overwrite").save(f"{main_path_base + descriptions_path}")
+
+# COMMAND ----------
+
+
