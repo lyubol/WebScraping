@@ -121,21 +121,28 @@ df_jobposts = (df_jobposts
 
 # COMMAND ----------
 
-# DBTITLE 1,Add hash key column
-# Add sha2 hash column based on all columns within the job posts DataFrame.
-# This is done in order to create a unique column that can be used for joins in Base to Delta
-
-df_jobposts = df_jobposts.withColumn("HashKey", sha2(concat(*[c for c in df_jobposts.columns if "IngestionDate" not in c]), 256))
-
-# Raise error if column HashKey is null
-if df_jobposts.where(col("HashKey").isNull()).count() > 0:
-    raise Exception("Column HashKey contains null values.")
-
-df_jobposts.display()
+# DBTITLE 1,Check for duplicates
+# Raise error if the combination of columns "Link" and "Department" produces duplicates
+if df_jobposts.groupBy("Link", "Department").count().where(col("count") > 1).count() > 0:
+    raise Exception("Combination of columns Link and Department, produces duplicates.")
 
 # COMMAND ----------
 
-# df_jobposts.select(split("uploaded", " ").getItem(1)).distinct().display()
+# DBTITLE 1,Add hash key column
+# # Add sha2 hash column based on all columns within the job posts DataFrame.
+# # This is done in order to create a unique column that can be used for joins in Base to Delta
+
+# df_jobposts = df_jobposts.withColumn("HashKey", sha2(concat(*[c for c in df_jobposts.columns if "IngestionDate" not in c]), 256))
+
+# # Raise error if column HashKey is null
+# if df_jobposts.where(col("HashKey").isNull()).count() > 0:
+#     raise Exception("Column HashKey contains null values.")
+
+# df_jobposts.display()
+
+# COMMAND ----------
+
+df_jobposts.select(*[c for c in df_jobposts.columns if "IngestionDate" not in c]).display()
 
 # COMMAND ----------
 
@@ -152,7 +159,3 @@ df_jobposts.display()
 # DBTITLE 1,Write to Base
 df_jobposts.distinct().write.format("parquet").mode("overwrite").save(f"{main_path_base + posts_path}")
 # df_jobdescriptions.write.format("parquet").mode("overwrite").save(f"{main_path_base + descriptions_path}")
-
-# COMMAND ----------
-
-
