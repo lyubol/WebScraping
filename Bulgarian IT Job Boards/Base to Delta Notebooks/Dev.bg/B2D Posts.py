@@ -98,13 +98,13 @@ joinDF = (
     sourceDF
     .join(
         targetDF, 
-        (sourceDF.HashKey == targetDF.HashKey),
+        (sourceDF.Link == targetDF.Link)
+        & (sourceDF.Department == targetDF.Department),
 #         & (targetDF.IsActive == "true"),
         "leftouter"
     )
     .select(
         sourceDF["*"],
-        targetDF.HashKey.alias("target_HashKey"),
         targetDF.Company.alias("target_Company"),
         targetDF.Department.alias("target_Department"),
         targetDF.Link.alias("target_Link"),
@@ -122,14 +122,14 @@ joinDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Hash source and target columns and compare them
-filterDF = joinDF.filter(xxhash64("HashKey") != xxhash64("target_HashKey")).withColumn("MergeKey", col("target_HashKey"))
+filterDF = joinDF.filter(xxhash64("Company", "Department", "Link", "Location", "Salary", "Title", "Uploaded", "Source") != xxhash64("target_Company", "target_Department", "target_Link", "target_Location", "target_Salary", "target_Title", "target_Uploaded", "target_Source")).withColumn("MergeKey", concat("Link", "Department"))
 
 filterDF.display()
 
 # COMMAND ----------
 
 # DBTITLE 1,Add MergeKey and set it to null where Id is not null
-dummyDF = filterDF.filter(col("target_HashKey").isNotNull()).withColumn("MergeKey", lit(None))
+dummyDF = filterDF.filter((col("target_Link").isNotNull()) & (col("target_Department").isNotNull())).withColumn("MergeKey", lit(None))
 
 dummyDF.display()
 
@@ -156,7 +156,7 @@ columns_dict
 (deltaPosts.alias("target")
  .merge(
      scdDF.alias("source"),
-     "target.HashKey = source.MergeKey"
+     condition = "concat(target.Link, target.Department) = source.MergeKey"
  )
  .whenMatchedUpdate(set = 
     {
@@ -167,7 +167,6 @@ columns_dict
  )
  .whenNotMatchedInsert(values =
         {
-             'HashKey': 'source.HashKey',
              'company': 'source.Company',
              'department': 'source.Department',
              'link': 'source.Link',
