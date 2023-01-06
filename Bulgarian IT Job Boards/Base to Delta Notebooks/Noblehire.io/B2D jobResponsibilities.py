@@ -40,6 +40,7 @@ df_job_responsibilities = spark.read.format("parquet").load(main_path + job_resp
 # Create the Source Data Frame
 sourceDF = df_job_responsibilities
 sourceDF.display()
+print("Count: {}".format(sourceDF.count()))
 
 # COMMAND ----------
 
@@ -58,7 +59,7 @@ sourceDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Add SCD Type 2 Columns to Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
 # df_job_responsibilities = (
 #     df_job_responsibilities
@@ -76,38 +77,10 @@ sourceDF.display()
 
 # COMMAND ----------
 
-# Command used for testing purposes
-
-# %sql
-
-# SELECT * FROM jobposts_noblehire.job_responsibilities
-
-# COMMAND ----------
-
-# Command used for testing purposes
-
-# %sql
-
-# DROP TABLE jobposts_noblehire.job_responsibilities
-
-# COMMAND ----------
-
-# Command used for testing purposes
-
-# %sql
-
-# DELETE FROM jobposts_noblehire.job_responsibilities
-# WHERE companyId = 1
-
-# COMMAND ----------
-
-# Command used for testing purposes
-
-# %sql
-
-# UPDATE jobposts_noblehire.job_responsibilities
-# SET responsibilities_0_title = 'Not a real responsibility.'
-# WHERE companyId = 2
+# MAGIC %sql
+# MAGIC 
+# MAGIC SELECT COUNT(*) FROM jobposts_noblehire.job_responsibilities WHERE IsActive = True
+# MAGIC -- DROP TABLE jobposts_noblehire.job_responsibilities
 
 # COMMAND ----------
 
@@ -153,7 +126,7 @@ joinDF = (
         targetDF, 
         (sourceDF.id == targetDF.id),
 #         & (targetDF.IsActive == "true"),
-        "leftouter"
+        "outer"
     )
     .select(
         sourceDF["*"],
@@ -232,7 +205,9 @@ columns_dict
         "EndDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
     }
  )
- .whenNotMatchedInsert(values =
+ .whenNotMatchedInsert(
+     condition = "source.id IS NOT NULL",
+     values =
         columns_dict
 #      {
 #         "id": "source.id",
@@ -291,4 +266,14 @@ deltaJobResponsibilities.history().display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Compare Delta Table records with records in the Source DataFrame
+# Read delta table into DataFrame
+deltaFinalPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/job_responsibilities")
+finalTargetDF = deltaFinalPosts.toDF()
 
+# Raise error if there are records in the delta table (when filtered to show only active records), which do not exists in the source DataFrame
+targetExceptSourceCount = finalTargetDF.where(col("IsActive") == True).select("id").exceptAll(sourceDF.select("id")).count()
+targetEqualsSourceCount = finalTargetDF.where(col("IsActive") == True).count() == sourceDF.count()
+
+if targetExceptSourceCount > 0 or targetEqualsSourceCount == False:
+    raise Exception("There are records in source, which do not exist in target.")

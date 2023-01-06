@@ -40,6 +40,7 @@ df_company_general = spark.read.format("parquet").load(main_path + company_gener
 # Create the Source Data Frame
 sourceDF = df_company_general
 sourceDF.display()
+print("Count: {}".format(sourceDF.count()))
 
 # COMMAND ----------
 
@@ -58,7 +59,7 @@ sourceDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Add SCD Type 2 Columns to Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
 # df_company_general = (
 #     df_company_general
@@ -76,38 +77,10 @@ sourceDF.display()
 
 # COMMAND ----------
 
-# Command used for testing purposes
-
-# %sql
-
-# SELECT * FROM jobposts_noblehire.company_general
-
-# COMMAND ----------
-
-# Command used for testing purposes
-
-# %sql
-
-# DROP TABLE jobposts_noblehire.company_general
-
-# COMMAND ----------
-
-# Command used for testing purposes
-
-# %sql
-
-# DELETE FROM jobposts_noblehire.company_general
-# WHERE companyId = 1
-
-# COMMAND ----------
-
-# Command used for testing purposes
-
-# %sql
-
-# UPDATE jobposts_noblehire.company_general
-# SET product = "No product"
-# WHERE companyId = 4
+# MAGIC %sql
+# MAGIC 
+# MAGIC SELECT COUNT(*) FROM jobposts_noblehire.company_general WHERE IsActive = True
+# MAGIC -- DROP TABLE jobposts_noblehire.company_general
 
 # COMMAND ----------
 
@@ -153,7 +126,7 @@ joinDF = (
         targetDF, 
         (sourceDF.companyId == targetDF.companyId),
 #         & (targetDF.IsActive == "true"),
-        "leftouter"
+        "outer"
     )
     .select(
         sourceDF["*"],
@@ -196,7 +169,7 @@ filterDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Add MergeKey and set it to null where Id is not null
-dummyDF = filterDF.filter(col("companyId").isNotNull()).withColumn("MergeKey", lit(None))
+dummyDF = filterDF.filter(col("target_companyId").isNotNull()).withColumn("MergeKey", lit(None))
 
 dummyDF.display()
 
@@ -232,7 +205,9 @@ columns_dict
         "EndDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
     }
  )
- .whenNotMatchedInsert(values =
+ .whenNotMatchedInsert(
+     condition = "source.companyId IS NOT NULL",
+     values =
         columns_dict
  )
  .execute()
@@ -242,3 +217,17 @@ columns_dict
 
 # DBTITLE 1,Check Delta Table History
 deltaCompanyGeneral.history().display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Compare Delta Table records with records in the Source DataFrame
+# Read delta table into DataFrame
+deltaFinalPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_general")
+finalTargetDF = deltaFinalPosts.toDF()
+
+# Raise error if there are records in the delta table (when filtered to show only active records), which do not exists in the source DataFrame
+targetExceptSourceCount = finalTargetDF.where(col("IsActive") == True).select("companyId").exceptAll(sourceDF.select("companyId")).count()
+targetEqualsSourceCount = finalTargetDF.where(col("IsActive") == True).count() == sourceDF.count()
+
+if targetExceptSourceCount > 0 or targetEqualsSourceCount == False:
+    raise Exception("There are records in source, which do not exist in target.")
