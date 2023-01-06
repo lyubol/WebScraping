@@ -28,6 +28,7 @@ df_jobposts = spark.read.format("parquet").load(main_path + posts_path)
 # Create the Source Data Frame
 sourceDF = df_jobposts
 sourceDF.display()
+print("Count: {}".format(sourceDF.count()))
 
 # COMMAND ----------
 
@@ -67,13 +68,13 @@ sourceDF.display()
 # DBTITLE 1,Add Delta Table Constraint
 # MAGIC %sql
 # MAGIC 
-# MAGIC -- ALTER TABLE jobposts_devbg.posts ADD CONSTRAINT HashKeyNotNull CHECK (HashKey IS NOT NULL);
+# MAGIC -- ALTER TABLE jobposts_devbg.posts ADD CONSTRAINT LinkAndDepartmentNotNull CHECK (Link IS NOT NULL AND Department IS NOT NULL);
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC 
-# MAGIC SELECT COUNT(*) FROM jobposts_devbg.posts
+# MAGIC SELECT COUNT(*) FROM jobposts_devbg.posts WHERE IsActive = True
 # MAGIC -- DROP TABLE jobposts_devbg.posts
 
 # COMMAND ----------
@@ -101,7 +102,7 @@ joinDF = (
         (sourceDF.Link == targetDF.Link)
         & (sourceDF.Department == targetDF.Department),
 #         & (targetDF.IsActive == "true"),
-        "leftouter"
+        "outer"
     )
     .select(
         sourceDF["*"],
@@ -122,7 +123,7 @@ joinDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Hash source and target columns and compare them
-filterDF = joinDF.filter(xxhash64("Company", "Department", "Link", "Location", "Salary", "Title", "Uploaded", "Source") != xxhash64("target_Company", "target_Department", "target_Link", "target_Location", "target_Salary", "target_Title", "target_Uploaded", "target_Source")).withColumn("MergeKey", concat("Link", "Department"))
+filterDF = joinDF.filter(xxhash64("Company", "Department", "Link", "Location", "Salary", "Title", "Uploaded", "Source") != xxhash64("target_Company", "target_Department", "target_Link", "target_Location", "target_Salary", "target_Title", "target_Uploaded", "target_Source")).withColumn("MergeKey", concat("target_Link", "target_Department"))
 
 filterDF.display()
 
@@ -165,7 +166,9 @@ columns_dict
         "EndDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
     }
  )
- .whenNotMatchedInsert(values =
+ .whenNotMatchedInsert(
+     condition = "source.Link IS NOT NULL AND source.Department IS NOT NULL",
+     values =
         {
              'company': 'source.Company',
              'department': 'source.Department',
@@ -190,4 +193,14 @@ deltaPosts.history().display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Compare Delta Table records with records in the Source DataFrame
+# Read delta table into DataFrame
+deltaFinalPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/DEV.bg/delta/posts")
+finalTargetDF = deltaFinalPosts.toDF()
 
+# Raise error if there are records in the delta table (when filtered to show only active records), which do not exists in the source DataFrame
+targetExceptSourceCount = finalTargetDF.where(col("IsActive") == True).select(concat("Link", "Department")).exceptAll(sourceDF.select(concat("Link", "Department"))).count()
+targetEqualsSourceCount = finalTargetDF.where(col("IsActive") == True).count() == sourceDF.count()
+
+if targetExceptSourceCount > 0 or targetEqualsSourceCount == False:
+    raise Exception("There are records in source, which do not exist in target.")

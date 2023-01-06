@@ -28,6 +28,7 @@ df_company = spark.read.format("parquet").load(main_path + company_path)
 # Create the Source Data Frame
 sourceDF = df_company
 sourceDF.display()
+print("Count: {}".format(sourceDF.count()))
 
 # COMMAND ----------
 
@@ -64,9 +65,16 @@ sourceDF.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Add Delta Table Constraint
 # MAGIC %sql
 # MAGIC 
-# MAGIC SELECT * FROM jobposts_devbg.company
+# MAGIC -- ALTER TABLE jobposts_devbg.posts ADD CONSTRAINT DEVBG_CompanyNotNull CHECK (Company IS NOT NULL);
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC 
+# MAGIC SELECT COUNT(*) FROM jobposts_devbg.company WHERE IsActive = True
 # MAGIC -- DROP TABLE jobposts_devbg.company
 
 # COMMAND ----------
@@ -93,7 +101,7 @@ joinDF = (
         targetDF, 
         (sourceDF.Company == targetDF.Company),
 #         & (targetDF.IsActive == "true"),
-        "leftouter"
+        "outer"
     )
     .select(
         sourceDF["*"],
@@ -129,7 +137,7 @@ joinDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Hash source and target columns and compare them
-filterDF = joinDF.filter(xxhash64(*[col for col in joinDF.columns if col.startswith("target") == False and "IngestionDate" not in col]) != xxhash64(*[col for col in joinDF.columns if col.startswith("target") == True and "IngestionDate" not in col])).withColumn("MergeKey", col("Company"))
+filterDF = joinDF.filter(xxhash64(*[col for col in joinDF.columns if col.startswith("target") == False and "IngestionDate" not in col]) != xxhash64(*[col for col in joinDF.columns if col.startswith("target") == True and "IngestionDate" not in col])).withColumn("MergeKey", col("target_Company"))
 
 filterDF.display()
 
@@ -172,7 +180,9 @@ columns_dict
         "EndDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
     }
  )
- .whenNotMatchedInsert(values =
+ .whenNotMatchedInsert(
+     condition = "source.Company IS NOT NULL",
+     values =
         {
              'Company': 'source.Company',
              'Locationburgas': 'source.Locationburgas',
@@ -209,3 +219,17 @@ columns_dict
 
 # DBTITLE 1,Check Delta Table History
 deltaCompany.history().display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Compare Delta Table records with records in the Source DataFrame
+# Read delta table into DataFrame
+deltaFinalPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/DEV.bg/delta/company")
+finalTargetDF = deltaFinalPosts.toDF()
+
+# Raise error if there are records in the delta table (when filtered to show only active records), which do not exists in the source DataFrame
+targetExceptSourceCount = finalTargetDF.where(col("IsActive") == True).select("Company").exceptAll(sourceDF.select("Company")).count()
+targetEqualsSourceCount = finalTargetDF.where(col("IsActive") == True).count() == sourceDF.count()
+
+if targetExceptSourceCount > 0 or targetEqualsSourceCount == False:
+    raise Exception("There are records in source, which do not exist in target.")
