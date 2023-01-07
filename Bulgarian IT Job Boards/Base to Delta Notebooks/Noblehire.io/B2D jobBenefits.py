@@ -71,9 +71,9 @@ print("Count: {}".format(sourceDF.count()))
 # COMMAND ----------
 
 # DBTITLE 1,Create Delta Table
-# This command has been ran just once, when the delta table was first created.
+# # This command has been ran just once, when the delta table was first created.
 
-df_job_benefits.write.format("delta").saveAsTable("jobposts_noblehire.job_benefits")
+# df_job_benefits.write.format("delta").saveAsTable("jobposts_noblehire.job_benefits")
 
 # COMMAND ----------
 

@@ -169,7 +169,7 @@ filterDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Add MergeKey and set it to null where Id is not null
-dummyDF = filterDF.filter(col("id").isNotNull()).withColumn("MergeKey", lit(None))
+dummyDF = filterDF.filter(col("target_id").isNotNull()).withColumn("MergeKey", lit(None))
 
 dummyDF.display()
 
