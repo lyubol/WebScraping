@@ -200,7 +200,7 @@ columns_dict
  )
  .whenMatchedUpdate(set = 
     {
-        "Source": "source.Source",
+        "Source": "'Noblehire.io'",
         "IsActive": "'False'", 
         "EndDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
     }

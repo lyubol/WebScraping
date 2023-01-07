@@ -171,7 +171,7 @@ scdDF.display()
 # COMMAND ----------
 
 # DBTITLE 1,Create Dictionary which will be used in the Merge Command
-columns_dict = {col: "source." + col for col in df_company_awards.columns}
+columns_dict = {col: "source." + col for col in df_company_awards.columns }
 columns_dict["IsActive"] = "'True'"
 columns_dict["StartDate"] = "current_timestamp"
 # columns_dict["EndDate"] = """to_date('9999-12-31 00:00:00.0000', 'MM-dd-yyyy HH:mm:ss')"""
@@ -188,7 +188,7 @@ columns_dict
  )
  .whenMatchedUpdate(set = 
     {
-        "Source": "source.Source",
+        "Source": "'Noblehire.io'",
         "IsActive": "'False'", 
         "EndDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
     }

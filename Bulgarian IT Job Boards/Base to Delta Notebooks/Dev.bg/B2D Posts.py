@@ -161,7 +161,7 @@ columns_dict
  )
  .whenMatchedUpdate(set = 
     {
-        "Source": "source.Source",
+        "Source": "'Dev.bg'",
         "IsActive": "'False'", 
         "EndDate": "date_format(current_timestamp(), 'yyyy-MM-dd HH:mm:ss')"
     }
@@ -177,7 +177,7 @@ columns_dict
              'salary': 'source.Salary',
              'title': 'source.Title',
              'uploaded': 'source.Uploaded',
-             'Source': 'source.Source',
+             'Source': "'Dev.bg'",
              'IngestionDate': 'source.IngestionDate',
              'IsActive': "'True'",
              'StartDate': 'current_timestamp'
