@@ -16,7 +16,9 @@ departments = [
     "erp-crm-development",
     "ui-ux-and-arts",
     "data-science",
-    "technical-support"
+    "technical-support",
+    "junior-intern",
+    "it-management"
 ]
 
 # Attributes of companies
@@ -119,13 +121,13 @@ df_jobposts = spark.createDataFrame(jobPosts)
 # COMMAND ----------
 
 # DBTITLE 1,Scrape job descriptions
-# Execute scrapeJobDescription for all job post links scraped by the above command
-# for job in jobPosts:
-#     scraper.scrapeJobDescriptions(url=job["link"], target_list = jobDescription)
-#     print(f"Scraping job descriptions in {department} department...")
+Execute scrapeJobDescription for all job post links scraped by the above command
+for job in jobPosts:
+    scraper.scrapeJobDescriptions(url=job["link"], target_list = jobDescription)
+    print(f"Scraping job descriptions in {department} department...")
     
-# # Create job descriptions DataFrame    
-# df_jobdescriptions = spark.createDataFrame(jobDescription)    
+# Create job descriptions DataFrame    
+df_jobdescriptions = spark.createDataFrame(jobDescription)    
 
 # COMMAND ----------
 
