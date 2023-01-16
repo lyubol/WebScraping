@@ -11,8 +11,7 @@ from bs4 import BeautifulSoup
 # Create a list to hold job posts as dictionaries
 jobPosts = []
 
-for i in range(12):
-
+for i in range(1,14):
     URL = f"https://www.zaplata.bg/en/search/?q=&city=&city_distance=0&go=&cat%5B0%5D=12&cat%5B1%5D=13&price=200%3B10000&page={i}"
     r = requests.get(URL)
 
@@ -23,54 +22,78 @@ for i in range(12):
     # For each list item
     for tag in div:
         ul = tag.find_all("ul", class_ = "listItem")
-        # If the job offer type is 'PRO' or 'TOP' or VIP', it won't have a salary.
-        # Other HTML tags are slightly different as well.
-        # First, we get the job offer type for each list item.
+
         for li in ul:
+            # Set post type
             try:
                 postType = li.find("li", class_ = "c1").img["title"]
-            except TypeError:
-                postType = None
-
-            # If the current job offer type is among the special offer types, execute the following:    
-            if postType in ["PRO job offers — Zaplata.bg", "TOP job offers — Zaplata.bg", "VIP job offers — Zaplata.bg"]:
+            except:
+                None
+            
+            # Set company name
+            try:
                 company = li.find("li", class_ = "c4").text.strip()
+            except:
+                company = None
+            
+            # Set job title
+            try:
                 jobTitle = li.find("li", class_ = "c2").a.text.strip()
-                jobInfo = li.find("li", class_ = "c2").text.strip()
+            except:
+                jobTitle = None  
+            
+            # Set additional job information
+            jobInfo = li.find("li", class_ = "c2").text.strip()
+            
+            # Set salary min and max values
+            try:
+                salaryRange = jobInfo.split("\n")[-2]
+            except:
+                salaryRange = None
+            
+            try:
+                minSalary = salaryRange.replace("Salary from:", "").split("to")[0].strip()
+            except:
+                minSalary = None
+            try:
+                assert str(minSalary).isnumeric()
+            except AssertionError:
+                minSalary = None
+                
+            try:
+                maxSalary = salaryRange.replace("BGN", "").split("to")[-1].strip()
+            except:
+                maxSalary = None
+            try:
+                assert str(maxSalary).isnumeric()
+            except AssertionError:
+                maxSalary = None
 
-                # Create a dictionary for each job post
-                jobDict = {
-                    "company": company,
-                    "job title": jobTitle,
-                    "min salary": None,
-                    "max salary": None,
-                    "date posted": jobInfo.split("\n")[1].split(",")[0],
-                    "location": jobInfo.split("\n")[1].split(",")[1].strip(),
-                    "job offer type": postType
-                }
+            # Set location    
+            try:
+                location = jobInfo.split("\n")[-1].split(",")[1].strip()
+            except:
+                location = None
+            
+            # Set post date
+            try:
+                datePosted = jobInfo.split("\n")[-1].split(",")[0].strip()
+            except:
+                datePosted = None
 
-                # Append the above created dictionary to a list
-                jobPosts.append(jobDict)
+            # Create a dictionary for each job post
+            jobDict = {
+                "company": company,
+                "job title": jobTitle,
+                "min salary": minSalary,
+                "max salary": maxSalary,
+                "date posted": datePosted,
+                "location": location,
+                "job offer type": postType
+            }
 
-            # If the current job offer type is not among the special offer types, execute the following:
-            else:
-                company = li.find("li", class_ = "c4").text.strip()
-                jobTitle = li.find("li", class_ = "c2").a.text.strip()
-                jobInfo = li.find("li", class_ = "c2").text.strip()
-
-                # Create a dictionary for each job post
-                jobDict = {
-                    "company": company,
-                    "job title": jobTitle,
-                    "min salary": jobInfo.split("\n")[1].split("to")[0].replace("Salary from:", "").strip(),
-                    "max salary": jobInfo.split("\n")[1].split("to")[1].replace("BGN", "").strip(),
-                    "date posted": jobInfo.split("\n")[2].split(",")[0],
-                    "location": jobInfo.split("\n")[2].split(",")[1].strip(),
-                    "job offer type": postType
-                }
-
-                # Append the above created dictionary to a list
-                jobPosts.append(jobDict)
+            # Append the above created dictionary to a list
+            jobPosts.append(jobDict)           
 
 # COMMAND ----------
 
