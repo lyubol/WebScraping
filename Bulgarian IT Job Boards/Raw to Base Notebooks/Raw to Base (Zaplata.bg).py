@@ -62,4 +62,4 @@ df_jobposts.display()
 # COMMAND ----------
 
 # DBTITLE 1,Write to ADLS (Base)
-df_jobposts.write.format("parquet").save(f"{main_path_base}{posts_path}")
+df_jobposts.distinct().write.format("parquet").save(f"{main_path_base}{posts_path}")
