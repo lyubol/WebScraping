@@ -162,7 +162,7 @@ for column in df_activities.columns:
 
     
 # Write to ADLS
-df_activities.write.format("parquet").mode("overwrite").save(f"{main_path}{job_activities_path}")
+df_activities.distinct().write.format("parquet").mode("overwrite").save(f"{main_path}{job_activities_path}")
     
 
 df_activities.display()
@@ -199,7 +199,7 @@ for column in df_benefits.columns:
     
 
 # Write to ADLS
-df_benefits.write.format("parquet").mode("overwrite").save(f"{main_path}{job_benefits_path}")
+df_benefits.distinct().write.format("parquet").mode("overwrite").save(f"{main_path}{job_benefits_path}")
     
     
 df_benefits.display()
@@ -631,7 +631,7 @@ for column in df_hiringprocesssteps.columns:
     
 
 # Write to ADLS
-df_hiringprocesssteps.write.format("parquet").mode("overwrite").save(f"{main_path}{job_hiring_process_path}")
+df_hiringprocesssteps.distinct().write.format("parquet").mode("overwrite").save(f"{main_path}{job_hiring_process_path}")
     
     
 df_hiringprocesssteps.display()
@@ -966,7 +966,7 @@ df = df.drop(*[c for c in df_posts.columns if c not in ["id", "companyId", "Sour
 
 
 # Write to ADLS
-df_posts.write.format("parquet").mode("overwrite").save(f"{main_path}{posts_path}")
+df_posts.distinct().write.format("parquet").mode("overwrite").save(f"{main_path}{posts_path}")
 
 
 df_posts.display()
@@ -1003,7 +1003,7 @@ for column in df_requirements.columns:
 
     
 # Write to ADLS
-df_requirements.write.format("parquet").mode("overwrite").save(f"{main_path}{job_requirements_path}")
+df_requirements.distinct().write.format("parquet").mode("overwrite").save(f"{main_path}{job_requirements_path}")
     
 
 df_requirements.display()
@@ -1039,7 +1039,7 @@ for column in df_responsibilities.columns:
 
   
 # Write to ADLS
-df_responsibilities.write.format("parquet").mode("overwrite").save(f"{main_path}{job_responsibilities_path}")
+df_responsibilities.distinct().write.format("parquet").mode("overwrite").save(f"{main_path}{job_responsibilities_path}")
 
 
 df_responsibilities.display()
@@ -1073,7 +1073,7 @@ for column in df_tools.columns:
     
 
 # Write to ADLS
-df_tools.write.format("parquet").mode("overwrite").save(f"{main_path}{job_tools_path}")
+df_tools.distinct().write.format("parquet").mode("overwrite").save(f"{main_path}{job_tools_path}")
     
     
 df_tools.display()
