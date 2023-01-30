@@ -51,10 +51,31 @@ df_jobposts = (df_jobposts
 
 # COMMAND ----------
 
-# DBTITLE 1,Add date and source columns
+# DBTITLE 1,Add date and source and id columns
 df_jobposts = (df_jobposts
   .withColumn("Source", lit("Zaplata.bg"))
   .withColumn("IngestionDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
+  .withColumn("JobId", split(col("JobLink"), "/")[6])             
+)
+
+# COMMAND ----------
+
+# DBTITLE 1,Reorder columns
+df_jobposts = (
+    df_jobposts
+    .select(
+        "JobId",
+        "JobLink",
+        "Company", 
+        "JobTitle",
+        "Location",
+        "MaxSalary",
+        "MinSalary",
+        "DatePosted",
+        "JobOfferType",
+        "Source",
+        "IngestionDate"
+    )
 )
 
 df_jobposts.display()
