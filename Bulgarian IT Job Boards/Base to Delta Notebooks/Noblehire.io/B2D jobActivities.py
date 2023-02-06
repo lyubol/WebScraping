@@ -102,11 +102,11 @@ print(newColumns)
 # DBTITLE 1,Create new columns in target if any in source
 if len(newColumns) > 0:
     for columnObject in newColumns:
-        spark.sql("ALTER TABLE jobposts_noblehire.posts ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
+        spark.sql("ALTER TABLE jobposts_noblehire.job_activities ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
         print("Column {} of type {} have been added.".format(columnObject[0], columnObject[1]))
     else:
-        deltaPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/job_activities")
-        targetDF = deltaPosts.toDF()
+        deltaJobActivities = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/job_activities")
+        targetDF = deltaJobActivities.toDF()
 else:
     print("No new columns.")
 
