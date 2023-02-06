@@ -961,6 +961,18 @@ df_posts = (df
       "title")
 )
 
+# Fill column postedAt_Timestamp with IngestionDate - 1 day, if it is empty
+df_posts = (
+    df_posts
+    .withColumn(
+        "postedAt_Timestamp", 
+        when(col("postedAt_Timestamp") == "", date_sub(col("IngestionDate"), 1))
+        .when(col("postedAt_Timestamp").isNull() == True, date_sub(col("IngestionDate"),1))
+        .otherwise(col("postedAt_Timestamp"))
+    )
+)
+                           
+
 # Drop the column from the Raw DataFrame
 df = df.drop(*[c for c in df_posts.columns if c not in ["id", "companyId", "Source", "IngestionDate", "postedAt_Timestamp"]], "ProductImages", "teamLeadImage")
 
