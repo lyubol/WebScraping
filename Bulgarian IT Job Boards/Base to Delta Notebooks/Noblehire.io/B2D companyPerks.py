@@ -102,11 +102,11 @@ print(newColumns)
 # DBTITLE 1,Create new columns in target if any in source
 if len(newColumns) > 0:
     for columnObject in newColumns:
-        spark.sql("ALTER TABLE jobposts_noblehire.posts ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
+        spark.sql("ALTER TABLE jobposts_noblehire.company_perks ADD COLUMN ({} {})".format(columnObject[0], columnObject[1]))
         print("Column {} of type {} have been added.".format(columnObject[0], columnObject[1]))
     else:
-        deltaPosts = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_perks")
-        targetDF = deltaPosts.toDF()
+        deltaCompanyPerks = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Noblehire.io/delta/company_perks")
+        targetDF = deltaCompanyPerks.toDF()
 else:
     print("No new columns.")
 
@@ -223,12 +223,12 @@ columns_dict
 #         "company_perks_text_9": "source.company_perks_text_9",
 #         "company_perks_text_10": "source.company_perks_text_10",
 #         "company_perks_text_11": "source.company_perks_text_11",
-#         "company_perks_text_11": "source.company_perks_text_12",
-#         "company_perks_text_11": "source.company_perks_text_13",
-#         "company_perks_text_11": "source.company_perks_text_14",
-#         "company_perks_text_11": "source.company_perks_text_15",
-#         "company_perks_text_11": "source.company_perks_text_16",
-#         "company_perks_text_11": "source.company_perks_text_17",
+#         "company_perks_text_12": "source.company_perks_text_12",
+#         "company_perks_text_13": "source.company_perks_text_13",
+#         "company_perks_text_14": "source.company_perks_text_14",
+#         "company_perks_text_15": "source.company_perks_text_15",
+#         "company_perks_text_16": "source.company_perks_text_16",
+#         "company_perks_text_17": "source.company_perks_text_17",
 #         "company_perks_title_0": "source.company_perks_title_0",
 #         "company_perks_title_1": "source.company_perks_title_1",
 #         "company_perks_title_2": "source.company_perks_title_2",
@@ -241,12 +241,12 @@ columns_dict
 #         "company_perks_title_9": "source.company_perks_title_9",
 #         "company_perks_title_10": "source.company_perks_title_10",
 #         "company_perks_title_11": "source.company_perks_title_11",
-#         "company_perks_title_11": "source.company_perks_title_12",
-#         "company_perks_title_11": "source.company_perks_title_13",
-#         "company_perks_title_11": "source.company_perks_title_14",
-#         "company_perks_title_11": "source.company_perks_title_15",
-#         "company_perks_title_11": "source.company_perks_title_16",
-#         "company_perks_title_11": "source.company_perks_title_17",
+#         "company_perks_title_12": "source.company_perks_title_12",
+#         "company_perks_title_13": "source.company_perks_title_13",
+#         "company_perks_title_14": "source.company_perks_title_14",
+#         "company_perks_title_15": "source.company_perks_title_15",
+#         "company_perks_title_16": "source.company_perks_title_16",
+#         "company_perks_title_17": "source.company_perks_title_17",
 #         "Source": "source.Source",
 #         "IngestionDate": "source.IngestionDate",
 #         "IsActive": "'True'",
