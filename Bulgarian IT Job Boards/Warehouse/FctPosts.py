@@ -61,7 +61,7 @@ df_date_filtered = (df_date_filtered
      .when(col("CalendarMonth") == "December", "дек")
      .otherwise(None))
  .withColumn("DevbgDate", concat_ws(" ", "DayOfMonth", "DevbgMonth"))
- .withColumn("DateZaplata", concat_ws(" ", "DayOfMonth", "CalendarMonth"))
+ .withColumn("DateZaplata", concat_ws(" ", lpad(df_date_filtered["DayOfMonth"], 2, "0"), "CalendarMonth"))
 ) 
 
 # COMMAND ----------
@@ -101,11 +101,24 @@ df_zaplata_final.display()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### In progress...
+# MAGIC ### Union sources
 
 # COMMAND ----------
 
-df_posts_noblehire.display()
+df_fct_posts = (
+    df_devbg_final
+    .select(concat("Link", "Department").alias("JobPostId"), col("CalendarDate").alias("DatePosted"), lit(1).alias("SourceSystemKey"))
+    .union(df_zaplata_final.select(col("JobId").alias("JobPostId"), col("CalendarDate").alias("DatePosted"), lit(2).alias("SourceSystemKey")))
+    .union(df_posts_noblehire.select(col("id").alias("JobPostId"), date_format(col("postedAt_Timestamp"), "yyyy-MM-dd").alias("DatePosted"), lit(3).alias("SourceSystemKey"))
+          )
+)
+    
+df_fct_posts.display()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### In progress...
 
 # COMMAND ----------
 
