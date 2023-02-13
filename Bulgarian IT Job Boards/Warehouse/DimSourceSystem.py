@@ -17,4 +17,4 @@ schema = StructType(fields = [
 # DBTITLE 1,Create DimSourceSystems
 df_dim_source_system = spark.createDataFrame(data = source_systems_data, schema = schema)
 
-df_dim_source_system.write.format("delta").saveAsTable("WAREHOUSE.DimSourceSystems")
+df_dim_source_system.write.format("delta").mode("overwrite").option("path", "/mnt/adlslirkov/it-job-boards/Warehouse/DimSourceSystems").saveAsTable("WAREHOUSE.DimSourceSystems")

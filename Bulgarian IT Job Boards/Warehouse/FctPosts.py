@@ -28,6 +28,8 @@ df_posts_zaplata = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-bo
 # DBTITLE 1,Read Dimensions
 df_dim_date = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimDate/")
 
+# ADD SOURCE SYSTEM
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -119,7 +121,3 @@ df_fct_posts.display()
 
 # MAGIC %md
 # MAGIC ### In progress...
-
-# COMMAND ----------
-
-
