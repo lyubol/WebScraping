@@ -24,8 +24,6 @@ current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 els
 # DBTITLE 1,Read Base tables
 df_resp_noblehire_raw = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/Noblehire.io/base/jobResponsibilities/{current_year}/{current_month}/{current_day}/")
 
-df_dim_source_systems = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimSourceSystems")
-
 # COMMAND ----------
 
 # MAGIC %md
@@ -36,28 +34,23 @@ df_dim_source_systems = spark.read.format("delta").load("/mnt/adlslirkov/it-job-
 surrogate_key_window = Window.orderBy(monotonically_increasing_id())
 
 # Generate surrogate keys
-df_resp_noblehire_enriched = df_resp_noblehire_raw.select(col("id").alias("responsibilities_id"), *[f"responsibilities_{c}_title" for c in range(1, 18)]).withColumn("ResponsibilitiesKey", row_number().over(surrogate_key_window))
+df_resp_noblehire_enriched = df_resp_noblehire_raw.select(col("id").alias("ResponsibilitiesId"), col("Source").alias("SourceSystem"), *[f"responsibilities_{c}_title" for c in range(0, 18)]).withColumn("ResponsibilitiesKey", row_number().over(surrogate_key_window))
 
 # COMMAND ----------
 
-df_resp_noblehire_enriched.display()
-
-# COMMAND ----------
-
-[c.replace("_title", "").replace("_", "").title() for c in df_resp_noblehire_enriched.columns if c.endswith("_title")]
-
-# COMMAND ----------
-
-# Add source system column and rename columns
+# Rename columns
 df_resp_noblehire_enriched = (
     df_resp_noblehire_enriched
-    .withColumn("SourceSystem", lit("Noblehire.io"))
-    .withColumnRenamed("responsibilities_id", "ResponsibilitiesId")
-    .toDF("ResponsibilitiesId", *[c.replace("_title", "").replace("_", "").title() for c in df_resp_noblehire_enriched.columns if c.endswith("_title")], "ResponsibilitiesKey", "SourceSystem")
+    .toDF("ResponsibilitiesId", "SourceSystem", *[c.replace("_title", "").replace("_", "").title() for c in df_resp_noblehire_enriched.columns if c.endswith("_title")], "ResponsibilitiesKey")
 )
 
 # Reorder columns
 df_resp_noblehire_enriched = df_resp_noblehire_enriched.select("ResponsibilitiesKey", "ResponsibilitiesId", "SourceSystem", *[c for c in df_resp_noblehire_enriched.columns if c not in ["ResponsibilitiesId", "ResponsibilitiesKey", "SourceSystem"]])
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Write to ADLS
 
 # COMMAND ----------
 
