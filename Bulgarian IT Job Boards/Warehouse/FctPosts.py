@@ -19,16 +19,38 @@ current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 els
 # DBTITLE 1,Read Base tables
 df_posts_noblehire = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/Noblehire.io/base/posts/{current_year}/{current_month}/{current_day}/")
 
-df_posts_devbg = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/DEV.bg/base/posts/{current_year}/{current_month}/{current_day}/")
+# df_posts_devbg = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/DEV.bg/base/posts/{current_year}/{current_month}/{current_day}/")
 
-df_posts_zaplata = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/Zaplata.bg/base/posts/{current_year}/{current_month}/{current_day}/")
+# df_posts_zaplata = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/Zaplata.bg/base/posts/{current_year}/{current_month}/{current_day}/")
 
 # COMMAND ----------
 
 # DBTITLE 1,Read Dimensions
 df_dim_date = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimDate/")
 
-# ADD SOURCE SYSTEM
+df_dim_source_systems = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimSourceSystems/")
+
+df_dim_activities = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimActivities/")
+
+df_dim_awards = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimAwards/")
+
+df_dim_benefits = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimBenefits/")
+
+df_dim_company = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimCompany/")
+
+df_dim_hiring_process = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimHiringProcess/")
+
+df_dim_locations = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations/")
+
+df_dim_perks = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimPerks/")
+
+df_dim_requirements = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimRequirements/")
+
+df_dim_responsibilities = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimResponsibilities/")
+
+df_dim_tools = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimTools/")
+
+df_dim_values = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimValues/")
 
 # COMMAND ----------
 
@@ -69,36 +91,36 @@ df_date_filtered = (df_date_filtered
 # COMMAND ----------
 
 # DBTITLE 1,Prepare DevBg
-# Align dates between DimDate and DevBg posts data
-df_posts_devbg = df_posts_devbg.withColumn("Uploaded", (expr("replace(Uploaded, '.', '')")))
+# # Align dates between DimDate and DevBg posts data
+# df_posts_devbg = df_posts_devbg.withColumn("Uploaded", (expr("replace(Uploaded, '.', '')")))
 
-# Join DevBg posts data with DimDate to obtain date information
-df_posts_devbg = df_posts_devbg.alias("df_posts_devbg")
-df_date_filtered = df_date_filtered.alias("df_date_filtered")
+# # Join DevBg posts data with DimDate to obtain date information
+# df_posts_devbg = df_posts_devbg.alias("df_posts_devbg")
+# df_date_filtered = df_date_filtered.alias("df_date_filtered")
 
-df_devbg_final = (
-    df_posts_devbg
-    .join(df_date_filtered, df_posts_devbg.Uploaded == df_date_filtered.DevbgDate, how = "left")
-    .select("df_posts_devbg.*", "df_date_filtered.CalendarDate")
-#     .withColumnRenamed("Date", "UploadedCalc")
-)
+# df_devbg_final = (
+#     df_posts_devbg
+#     .join(df_date_filtered, df_posts_devbg.Uploaded == df_date_filtered.DevbgDate, how = "left")
+#     .select("df_posts_devbg.*", "df_date_filtered.CalendarDate")
+# #     .withColumnRenamed("Date", "UploadedCalc")
+# )
 
-df_devbg_final.display()
+# df_devbg_final.display()
 
 # COMMAND ----------
 
 # DBTITLE 1,Prepare ZaplataBg
-df_posts_zaplata = df_posts_zaplata.alias("df_posts_zaplata")
-df_date_filtered = df_date_filtered.alias("df_date_filtered")
+# df_posts_zaplata = df_posts_zaplata.alias("df_posts_zaplata")
+# df_date_filtered = df_date_filtered.alias("df_date_filtered")
 
-df_zaplata_final = (
-    df_posts_zaplata
-    .join(df_date_filtered, df_posts_zaplata.DatePosted == df_date_filtered.DateZaplata, how = "left")
-    .select("df_posts_zaplata.*", "df_date_filtered.CalendarDate")
-#     .withColumnRenamed("Date", "DatePostedCalc")
-)
+# df_zaplata_final = (
+#     df_posts_zaplata
+#     .join(df_date_filtered, df_posts_zaplata.DatePosted == df_date_filtered.DateZaplata, how = "left")
+#     .select("df_posts_zaplata.*", "df_date_filtered.CalendarDate")
+# #     .withColumnRenamed("Date", "DatePostedCalc")
+# )
 
-df_zaplata_final.display()
+# df_zaplata_final.display()
 
 # COMMAND ----------
 
@@ -107,14 +129,47 @@ df_zaplata_final.display()
 
 # COMMAND ----------
 
-df_fct_posts = (
-    df_devbg_final
-    .select(concat("Link", "Department").alias("JobPostId"), col("CalendarDate").alias("DatePosted"), lit(1).alias("SourceSystemKey"))
-    .union(df_zaplata_final.select(col("JobId").alias("JobPostId"), col("CalendarDate").alias("DatePosted"), lit(2).alias("SourceSystemKey")))
-    .union(df_posts_noblehire.select(col("id").alias("JobPostId"), date_format(col("postedAt_Timestamp"), "yyyy-MM-dd").alias("DatePosted"), lit(3).alias("SourceSystemKey"))
-          )
-)
+# df_fct_posts = (
+#     df_devbg_final
+#     .select(concat("Link", "Department").alias("JobPostId"), col("CalendarDate").alias("DatePosted"), lit(1).alias("SourceSystemKey"))
+#     .union(df_zaplata_final.select(col("JobId").alias("JobPostId"), col("CalendarDate").alias("DatePosted"), lit(2).alias("SourceSystemKey")))
+#     .union(df_posts_noblehire.select(col("id").alias("JobPostId"), date_format(col("postedAt_Timestamp"), "yyyy-MM-dd").alias("DatePosted"), lit(3).alias("SourceSystemKey"))
+#           )
+# )
     
+# df_fct_posts.display()
+
+# COMMAND ----------
+
+df_posts_noblehire.display()
+
+
+# COMMAND ----------
+
+# Add location
+
+df_fct_posts = (
+    df_posts_noblehire
+    .select(
+        col("id").alias("JobPostId"), 
+        date_format(col("postedAt_Timestamp"), "yyyy-MM-dd").alias("DatePosted"), 
+        lit(3).alias("SourceSystemKey"), 
+        col("companyId").alias("CompanyId"),
+        col("id").alias("ActivityId"),
+        col("companyId").alias("AwardsId"),
+        col("id").alias("BenefitsId"),
+        col("companyId").alias("CompanyId"),
+        col("id").alias("HiringProcessId"),
+        lit(None).alias("LocationId"),
+        col("companyId").alias("PerksId"),
+        col("id").alias("RequirementsId"),
+        col("id").alias("ResponsibilitiesId"),
+        col("id").alias("ToolsId"),
+        col("companyId").alias("ValuesId"),
+        lit(None).alias("JunkId")
+    )
+)
+
 df_fct_posts.display()
 
 # COMMAND ----------
