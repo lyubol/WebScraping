@@ -4,6 +4,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Imports
+import pyspark.sql.utils
 from pyspark.sql import Window
 
 # COMMAND ----------
@@ -22,11 +23,11 @@ current_day = "0" + str(date.today().day) if len(str(date.today().day)) == 1 els
 # COMMAND ----------
 
 # DBTITLE 1,Read Base tables
-df_company_noblehire_raw = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/Noblehire.io/base/companyGeneral/{current_year}/{current_month}/{current_day}/")
+df_company_noblehire_raw = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/Noblehire.io/base/companyLocations/{current_year}/{current_month}/{current_day}/")
 
 df_company_devbg = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/DEV.bg/base/company/{current_year}/{current_month}/{current_day}/")
 
-df_company_zaplata = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/Zaplata.bg/base/posts/{current_year}/{current_month}/{current_day}/")
+# df_company_zaplata = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-boards/Zaplata.bg/base/posts/{current_year}/{current_month}/{current_day}/")
 
 # COMMAND ----------
 
@@ -35,99 +36,183 @@ df_company_zaplata = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-
 
 # COMMAND ----------
 
-df_locations_0 = (
-    df_company_noblehire_raw
-    .select(
-        col("company_locations_id_0").alias("LocationId"),
+df_locations_union_enriched = (df_company_noblehire_raw
+      .withColumn("locations_4_teamSize", lit(None))
+      .select(
+        col("id").alias("JobPostId"),
+        col("companyId").alias("CompanyId"),
         col("Source").alias("SourceSystem"),
-        col("company_locations_comment_0").alias("LocationComment"),
-        col("company_locations_founded_0").alias("LocationFounded"),
-        col("company_locations_teamSize_0").alias("LocationTeamSize"),
-        col("company_locations_address_0_formatted_address").alias("LocationAddress"),
-        col("company_locations_address_0_location_type").alias("LocationType"),
-        col("company_locations_address_0_latitude").alias("Latitude"),
-        col("company_locations_address_0_longitude").alias("Longitude")
-    )
-    .where(col("company_locations_id_0").isNotNull())
+        col("locations_0_id").alias("LocationId_0"),
+        col("locations_0_comment").alias("LocationComment_0"),
+        col("locations_0_founded").alias("LocationFounded_0"),
+        col("locations_0_teamSize").alias("LocationTeamSize_0"),
+        col("locations_0_address_formatted_address").alias("LocationAddress_0"),
+        col("locations_0_address_location_type").alias("LocationType_0"),
+        col("locations_0_address_latitude").alias("Latitude_0"),
+        col("locations_0_address_longitude").alias("Longitude_0"),
+        col("locations_1_id").alias("LocationId_1"),
+        col("locations_1_comment").alias("LocationComment_1"),
+        col("locations_1_founded").alias("LocationFounded_1"),
+        col("locations_1_teamSize").alias("LocationTeamSize_1"),
+        col("locations_1_address_formatted_address").alias("LocationAddress_1"),
+        col("locations_1_address_location_type").alias("LocationType_1"),
+        col("locations_1_address_latitude").alias("Latitude_1"),
+        col("locations_1_address_longitude").alias("Longitude_1"),
+        col("locations_2_id").alias("LocationId_2"),
+        col("locations_2_comment").alias("LocationComment_2"),
+        col("locations_2_founded").alias("LocationFounded_2"),
+        col("locations_2_teamSize").alias("LocationTeamSize_2"),
+        col("locations_2_address_formatted_address").alias("LocationAddress_2"),
+        col("locations_2_address_location_type").alias("LocationType_2"),
+        col("locations_2_address_latitude").alias("Latitude_2"),
+        col("locations_2_address_longitude").alias("Longitude_2"),
+        col("locations_3_id").alias("LocationId_3"),
+        col("locations_3_comment").alias("LocationComment_3"),
+        col("locations_3_founded").alias("LocationFounded_3"),
+        col("locations_3_teamSize").alias("LocationTeamSize_3"),
+        col("locations_3_address_formatted_address").alias("LocationAddress_3"),
+        col("locations_3_address_location_type").alias("LocationType_3"),
+        col("locations_3_address_latitude").alias("Latitude_3"),
+        col("locations_3_address_longitude").alias("Longitude_3"),
+        col("locations_4_id").alias("LocationId_4"),
+        col("locations_4_comment").alias("LocationComment_4"),
+        col("locations_4_founded").alias("LocationFounded_4"),
+        col("locations_4_teamSize").alias("LocationTeamSize_4"),
+        col("locations_4_address_formatted_address").alias("LocationAddress_4"),
+        col("locations_4_address_location_type").alias("LocationType_4"),
+        col("locations_4_address_latitude").alias("Latitude_4"),
+        col("locations_4_address_longitude").alias("Longitude_4")
+      )
 )
 
-df_locations_1 = (
-    df_company_noblehire_raw
-    .select(
-        col("company_locations_id_1").alias("LocationId"),
-        col("Source").alias("SourceSystem"),
-        col("company_locations_comment_1").alias("LocationComment"),
-        col("company_locations_founded_1").alias("LocationFounded"),
-        col("company_locations_teamSize_1").alias("LocationTeamSize"),
-        col("company_locations_address_1_formatted_address").alias("LocationAddress"),
-        col("company_locations_address_1_location_type").alias("LocationType"),
-        col("company_locations_address_1_latitude").alias("Latitude"),
-        col("company_locations_address_1_longitude").alias("Longitude")
-    )
-    .where(col("company_locations_id_1").isNotNull())
-)
+# COMMAND ----------
 
-df_locations_2 = (
-    df_company_noblehire_raw
-    .select(
-        col("company_locations_id_2").alias("LocationId"),
-        col("Source").alias("SourceSystem"),
-        col("company_locations_comment_2").alias("LocationComment"),
-        col("company_locations_founded_2").alias("LocationFounded"),
-        col("company_locations_teamSize_2").alias("LocationTeamSize"),
-        col("company_locations_address_2_formatted_address").alias("LocationAddress"),
-        col("company_locations_address_2_location_type").alias("LocationType"),
-        col("company_locations_address_2_latitude").alias("Latitude"),
-        col("company_locations_address_2_longitude").alias("Longitude")
-    )
-    .where(col("company_locations_id_2").isNotNull())
-)
+# df_locations_0 = (
+#     df_company_noblehire_raw
+#     .select(
+#         col("locations_0_id").alias("LocationId"),
+#         col("id").alias("JobPostId"),
+#         col("companyId").alias("CompanyId"),
+#         col("Source").alias("SourceSystem"),
+#         col("locations_0_comment").alias("LocationComment"),
+#         col("locations_0_founded").alias("LocationFounded"),
+#         col("locations_0_teamSize").alias("LocationTeamSize"),
+#         col("locations_0_address_formatted_address").alias("LocationAddress"),
+#         col("locations_0_address_location_type").alias("LocationType"),
+#         col("locations_0_address_latitude").alias("Latitude"),
+#         col("locations_0_address_longitude").alias("Longitude")
+#     )
+#     .where(col("locations_0_id").isNotNull())
+# )
 
-df_locations_3 = (
-    df_company_noblehire_raw
-    .select(
-        col("company_locations_id_3").alias("LocationId"),
-        col("Source").alias("SourceSystem"),
-        col("company_locations_comment_3").alias("LocationComment"),
-        col("company_locations_founded_3").alias("LocationFounded"),
-        col("company_locations_teamSize_3").alias("LocationTeamSize"),
-        col("company_locations_address_3_formatted_address").alias("LocationAddress"),
-        col("company_locations_address_3_location_type").alias("LocationType"),
-        col("company_locations_address_3_latitude").alias("Latitude"),
-        col("company_locations_address_3_longitude").alias("Longitude")
-    )
-    .where(col("company_locations_id_3").isNotNull())
-)
+# df_locations_1 = (
+#     df_company_noblehire_raw
+#     .select(
+#         col("locations_1_id").alias("LocationId"),
+#         col("id").alias("JobPostId"),
+#         col("companyId").alias("CompanyId"),
+#         col("Source").alias("SourceSystem"),
+#         col("locations_1_comment").alias("LocationComment"),
+#         col("locations_1_founded").alias("LocationFounded"),
+#         col("locations_1_teamSize").alias("LocationTeamSize"),
+#         col("locations_1_address_formatted_address").alias("LocationAddress"),
+#         col("locations_1_address_location_type").alias("LocationType"),
+#         col("locations_1_address_latitude").alias("Latitude"),
+#         col("locations_1_address_longitude").alias("Longitude")
+#     )
+#     .where(col("locations_1_id").isNotNull())
+# )
 
-df_locations_4 = (
-    df_company_noblehire_raw
-    .select(
-        col("company_locations_id_4").alias("LocationId"),
-        col("Source").alias("SourceSystem"),
-        col("company_locations_comment_4").alias("LocationComment"),
-        col("company_locations_founded_4").alias("LocationFounded"),
-        col("company_locations_teamSize_4").alias("LocationTeamSize"),
-        col("company_locations_address_4_formatted_address").alias("LocationAddress"),
-        col("company_locations_address_4_location_type").alias("LocationType"),
-        col("company_locations_address_4_latitude").alias("Latitude"),
-        col("company_locations_address_4_longitude").alias("Longitude")
-    )
-    .where(col("company_locations_id_4").isNotNull())
-)
+# df_locations_2 = (
+#     df_company_noblehire_raw
+#     .select(
+#         col("locations_2_id").alias("LocationId"),
+#         col("id").alias("JobPostId"),
+#         col("companyId").alias("CompanyId"),
+#         col("Source").alias("SourceSystem"),
+#         col("locations_2_comment").alias("LocationComment"),
+#         col("locations_2_founded").alias("LocationFounded"),
+#         col("locations_2_teamSize").alias("LocationTeamSize"),
+#         col("locations_2_address_formatted_address").alias("LocationAddress"),
+#         col("locations_2_address_location_type").alias("LocationType"),
+#         col("locations_2_address_latitude").alias("Latitude"),
+#         col("locations_2_address_longitude").alias("Longitude")
+#     )
+#     .where(col("locations_2_id").isNotNull())
+# )
 
-df_locations_union = df_locations_0.union(df_locations_1).union(df_locations_2).union(df_locations_3).union(df_locations_4)
+# df_locations_3 = (
+#     df_company_noblehire_raw
+#     .select(
+#         col("locations_3_id").alias("LocationId"),
+#         col("id").alias("JobPostId"),
+#         col("companyId").alias("CompanyId"),
+#         col("Source").alias("SourceSystem"),
+#         col("locations_3_comment").alias("LocationComment"),
+#         col("locations_3_founded").alias("LocationFounded"),
+#         col("locations_3_teamSize").alias("LocationTeamSize"),
+#         col("locations_3_address_formatted_address").alias("LocationAddress"),
+#         col("locations_3_address_location_type").alias("LocationType"),
+#         col("locations_3_address_latitude").alias("Latitude"),
+#         col("locations_3_address_longitude").alias("Longitude")
+#     )
+#     .where(col("locations_3_id").isNotNull())
+# )
+
+# try:
+#     df_locations_4 = (
+#         df_company_noblehire_raw
+#         .select(
+#             col("locations_4_id").alias("LocationId"),
+#             col("id").alias("JobPostId"),
+#             col("companyId").alias("CompanyId"),
+#             col("Source").alias("SourceSystem"),
+#             col("locations_4_comment").alias("LocationComment"),
+#             col("locations_4_founded").alias("LocationFounded"),
+#             col("locations_4_teamSize").alias("LocationTeamSize"),
+#             col("locations_4_address_formatted_address").alias("LocationAddress"),
+#             col("locations_4_address_location_type").alias("LocationType"),
+#             col("locations_4_address_latitude").alias("Latitude"),
+#             col("locations_4_address_longitude").alias("Longitude")
+#         )
+#         .where(col("locations_4_id").isNotNull()))
+# except pyspark.sql.utils.AnalysisException:
+#     df_locations_4 = (
+#         df_company_noblehire_raw
+#         .withColumn("locations_4_teamSize", lit(None))
+#         .select(
+#             col("locations_4_id").alias("LocationId"),
+#             col("id").alias("JobPostId"),
+#             col("companyId").alias("CompanyId"),
+#             col("Source").alias("SourceSystem"),
+#             col("locations_4_comment").alias("LocationComment"),
+#             col("locations_4_founded").alias("LocationFounded"),
+#             col("locations_4_teamSize").alias("LocationTeamSize"),
+#             col("locations_4_address_formatted_address").alias("LocationAddress"),
+#             col("locations_4_address_location_type").alias("LocationType"),
+#             col("locations_4_address_latitude").alias("Latitude"),
+#             col("locations_4_address_longitude").alias("Longitude")
+#         )
+#         .where(col("locations_4_id").isNotNull()))
+
+
+# df_locations_union = df_locations_0.union(df_locations_1).union(df_locations_2).union(df_locations_3).union(df_locations_4)
 
 # COMMAND ----------
 
 surrogate_key_window = Window.orderBy(monotonically_increasing_id())
 
 # Generate surrogate keys
-df_locations_union_enriched = df_locations_union.select("LocationId", "SourceSystem", "LocationComment", "LocationFounded", "LocationTeamSize", "LocationAddress", "LocationType", "Latitude", "Longitude").withColumn("LocationKey", row_number().over(surrogate_key_window))
+df_locations_union_enriched = (
+    df_locations_union_enriched
+    .withColumn("LocationKey", row_number().over(surrogate_key_window))
+    .select("LocationKey", "*")
+)
 
 # COMMAND ----------
 
-# Reorder columns
-df_locations_union_enriched = df_locations_union_enriched.select("LocationKey", "LocationId", "SourceSystem", "LocationComment", "LocationFounded", "LocationTeamSize", "LocationAddress", "LocationType", "Latitude", "Longitude")
+# Create a function to extract the address in format - City, Country when the LocationType is in:
+# ROOFTOP, RANGE_INTERPOLATED, GEOMETRIC_CENTER
 
 # COMMAND ----------
 
@@ -137,4 +222,4 @@ df_locations_union_enriched = df_locations_union_enriched.select("LocationKey", 
 # COMMAND ----------
 
 # DBTITLE 1,Create DimLocations
-df_locations_union_enriched.write.format("delta").mode("overwrite").option("path", "/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations").saveAsTable("WAREHOUSE.DimLocations")
+# df_locations_union_enriched_final.write.format("delta").mode("overwrite").option("path", "/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations").saveAsTable("WAREHOUSE.DimLocations")
