@@ -39,10 +39,9 @@ df_company_devbg = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-bo
 df_locations_union_enriched = (df_company_noblehire_raw
       .withColumn("locations_4_teamSize", lit(None))
       .select(
-        col("id").alias("JobPostId"),
+        col("id").alias("LocationId"),
         col("companyId").alias("CompanyId"),
         col("Source").alias("SourceSystem"),
-        col("locations_0_id").alias("LocationId_0"),
         col("locations_0_comment").alias("LocationComment_0"),
         col("locations_0_founded").alias("LocationFounded_0"),
         col("locations_0_teamSize").alias("LocationTeamSize_0"),
@@ -50,7 +49,6 @@ df_locations_union_enriched = (df_company_noblehire_raw
         col("locations_0_address_location_type").alias("LocationType_0"),
         col("locations_0_address_latitude").alias("Latitude_0"),
         col("locations_0_address_longitude").alias("Longitude_0"),
-        col("locations_1_id").alias("LocationId_1"),
         col("locations_1_comment").alias("LocationComment_1"),
         col("locations_1_founded").alias("LocationFounded_1"),
         col("locations_1_teamSize").alias("LocationTeamSize_1"),
@@ -58,7 +56,6 @@ df_locations_union_enriched = (df_company_noblehire_raw
         col("locations_1_address_location_type").alias("LocationType_1"),
         col("locations_1_address_latitude").alias("Latitude_1"),
         col("locations_1_address_longitude").alias("Longitude_1"),
-        col("locations_2_id").alias("LocationId_2"),
         col("locations_2_comment").alias("LocationComment_2"),
         col("locations_2_founded").alias("LocationFounded_2"),
         col("locations_2_teamSize").alias("LocationTeamSize_2"),
@@ -66,7 +63,6 @@ df_locations_union_enriched = (df_company_noblehire_raw
         col("locations_2_address_location_type").alias("LocationType_2"),
         col("locations_2_address_latitude").alias("Latitude_2"),
         col("locations_2_address_longitude").alias("Longitude_2"),
-        col("locations_3_id").alias("LocationId_3"),
         col("locations_3_comment").alias("LocationComment_3"),
         col("locations_3_founded").alias("LocationFounded_3"),
         col("locations_3_teamSize").alias("LocationTeamSize_3"),
@@ -74,7 +70,6 @@ df_locations_union_enriched = (df_company_noblehire_raw
         col("locations_3_address_location_type").alias("LocationType_3"),
         col("locations_3_address_latitude").alias("Latitude_3"),
         col("locations_3_address_longitude").alias("Longitude_3"),
-        col("locations_4_id").alias("LocationId_4"),
         col("locations_4_comment").alias("LocationComment_4"),
         col("locations_4_founded").alias("LocationFounded_4"),
         col("locations_4_teamSize").alias("LocationTeamSize_4"),
@@ -206,13 +201,28 @@ surrogate_key_window = Window.orderBy(monotonically_increasing_id())
 df_locations_union_enriched = (
     df_locations_union_enriched
     .withColumn("LocationKey", row_number().over(surrogate_key_window))
-    .select("LocationKey", "*")
+    .select("LocationKey", *[c for c in df_locations_union_enriched.columns if "LocationKey" not in c])
 )
 
 # COMMAND ----------
 
-# Create a function to extract the address in format - City, Country when the LocationType is in:
-# ROOFTOP, RANGE_INTERPOLATED, GEOMETRIC_CENTER
+# define function to extract city and country from address string
+def getAddress(address):
+    if address != None:
+        return ",".join(address.split(",")[-2:])
+
+# register function
+getAddress_udf = udf(getAddress)
+
+# apply function
+df_locations_union_enriched = (
+    df_locations_union_enriched
+    .withColumn("LocationAddress_0", when(col("LocationType_0").isin(["ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"]), getAddress_udf("LocationAddress_0")).otherwise(col("LocationAddress_0")))
+    .withColumn("LocationAddress_1", when(col("LocationType_1").isin(["ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"]), getAddress_udf("LocationAddress_1")).otherwise(col("LocationAddress_1")))
+    .withColumn("LocationAddress_2", when(col("LocationType_2").isin(["ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"]), getAddress_udf("LocationAddress_2")).otherwise(col("LocationAddress_2"))) 
+    .withColumn("LocationAddress_3", when(col("LocationType_3").isin(["ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"]), getAddress_udf("LocationAddress_3")).otherwise(col("LocationAddress_3")))
+    .drop("LocationType_0", "LocationType_1", "LocationType_2", "LocationType_3")
+)
 
 # COMMAND ----------
 
@@ -222,4 +232,4 @@ df_locations_union_enriched = (
 # COMMAND ----------
 
 # DBTITLE 1,Create DimLocations
-# df_locations_union_enriched_final.write.format("delta").mode("overwrite").option("path", "/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations").saveAsTable("WAREHOUSE.DimLocations")
+df_locations_union_enriched.write.format("delta").mode("overwrite").option("path", "/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations").saveAsTable("WAREHOUSE.DimLocations")
