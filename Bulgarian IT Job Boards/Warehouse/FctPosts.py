@@ -25,6 +25,10 @@ df_posts_noblehire = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-
 
 # COMMAND ----------
 
+df_posts_noblehire.display()
+
+# COMMAND ----------
+
 # DBTITLE 1,Read Dimensions
 df_dim_date = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimDate/")
 
@@ -152,21 +156,19 @@ df_fct_posts = (
     df_posts_noblehire
     .select(
         col("id").alias("JobPostId"), 
-        date_format(col("postedAt_Timestamp"), "yyyy-MM-dd").alias("DatePosted"), 
+        date_format(col("postedAt_Timestamp"), "yyyyMMdd").alias("DatePosted"), 
         lit(3).alias("SourceSystemKey"), 
-        col("companyId").alias("CompanyId"),
         col("id").alias("ActivityId"),
         col("companyId").alias("AwardsId"),
         col("id").alias("BenefitsId"),
         col("companyId").alias("CompanyId"),
         col("id").alias("HiringProcessId"),
-        lit(None).alias("LocationId"),
+        col("id").alias("LocationId"),
         col("companyId").alias("PerksId"),
         col("id").alias("RequirementsId"),
         col("id").alias("ResponsibilitiesId"),
         col("id").alias("ToolsId"),
-        col("companyId").alias("ValuesId"),
-        lit(None).alias("JunkId")
+        col("companyId").alias("ValuesId")
     )
 )
 
@@ -175,4 +177,9 @@ df_fct_posts.display()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### In progress...
+# MAGIC ### Write to ADLS
+
+# COMMAND ----------
+
+# DBTITLE 1,Create FctPosts
+df_fct_posts.write.format("delta").mode("overwrite").option("path", "/mnt/adlslirkov/it-job-boards/Warehouse/FctPosts").saveAsTable("WAREHOUSE.FctPosts")
