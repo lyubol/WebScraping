@@ -20,19 +20,19 @@ CREATE TABLE WAREHOUSE.DimActivities (
   ActivitiesKey          BIGINT GENERATED ALWAYS AS IDENTITY,
   ActivitiesId           BIGINT NOT NULL,
   SourceSystem           STRING NOT NULL,
-  ActivitiesTimePercent0 STRING,
+  ActivitiesTimePercent0 INT,
   Activities0            STRING,
-  ActivitiesTimePercent1 STRING,
+  ActivitiesTimePercent1 INT,
   Activities1            STRING,
-  ActivitiesTimePercent2 STRING,
+  ActivitiesTimePercent2 INT,
   Activities2            STRING,
-  ActivitiesTimePercent3 STRING,
+  ActivitiesTimePercent3 INT,
   Activities3            STRING,
-  ActivitiesTimePercent4 STRING,
+  ActivitiesTimePercent4 INT,
   Activities4            STRING,
-  ActivitiesTimePercent5 STRING,
+  ActivitiesTimePercent5 INT,
   Activities5            STRING,
-  ActivitiesTimePercent6 STRING,
+  ActivitiesTimePercent6 INT,
   Activities6            STRING,
   IngestionDate          TIMESTAMP,
   IsActive               BOOLEAN,
@@ -55,6 +55,15 @@ DROP TABLE WAREHOUSE.DimActivities
 -- COMMAND ----------
 
 SELECT * FROM WAREHOUSE.DimActivities
+
+-- COMMAND ----------
+
+-- DELETE FROM WAREHOUSE.DimActivities
+-- WHERE ActivitiesId IN (156, 833)
+
+-- UPDATE WAREHOUSE.DimActivities
+-- SET ActivitiesTimePercent0 = 101
+-- WHERE ActivitiesId = 141
 
 -- COMMAND ----------
 
