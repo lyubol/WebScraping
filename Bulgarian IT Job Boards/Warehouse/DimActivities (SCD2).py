@@ -251,9 +251,13 @@ deltaJobActivities.history().display()
 # COMMAND ----------
 
 # DBTITLE 1,Compare Delta Table records with records in the Source DataFrame
+# Read delta table into DataFrame
+deltaFinal = DeltaTable.forPath(spark, "/mnt/adlslirkov/it-job-boards/Warehouse/DimActivities")
+finalTargetDF = deltaFinal.toDF()
+
 # Raise error if there are records in the delta table (when filtered to show only active records), which do not exists in the source DataFrame
-targetExceptSourceCount = df_activities_noblehire_enriched.where(col("IsActive") == True).select("ActivitiesId").exceptAll(sourceDF.select("ActivitiesId")).count()
-targetEqualsSourceCount = df_activities_noblehire_enriched.where(col("IsActive") == True).count() == sourceDF.count()
+targetExceptSourceCount = finalTargetDF.where(col("IsActive") == True).select("ActivitiesId").exceptAll(sourceDF.select("ActivitiesId")).count()
+targetEqualsSourceCount = finalTargetDF.where(col("IsActive") == True).count() == sourceDF.count()
 
 if targetExceptSourceCount > 0 or targetEqualsSourceCount == False:
     raise Exception("There are records in source, which do not exist in target.")
