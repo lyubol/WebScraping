@@ -349,4 +349,181 @@ SELECT * FROM WAREHOUSE.DimRequirements
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC ## DimResponsibilities
+
+-- COMMAND ----------
+
+-- DBTITLE 1,DimResponsibilities Table Definition
+CREATE TABLE WAREHOUSE.DimResponsibilities  (
+  ResponsibilitiesKey BIGINT GENERATED ALWAYS AS IDENTITY,
+  ResponsibilitiesId  BIGINT NOT NULL,
+  SourceSystem        STRING NOT NULL,
+  Responsibilities0   STRING,
+  Responsibilities1   STRING,
+  Responsibilities2   STRING,
+  Responsibilities3   STRING,
+  Responsibilities4   STRING,
+  Responsibilities5   STRING,
+  Responsibilities6   STRING,
+  Responsibilities7   STRING,
+  Responsibilities8   STRING,
+  Responsibilities9   STRING,
+  Responsibilities10  STRING,
+  Responsibilities11  STRING,
+  Responsibilities12  STRING,
+  Responsibilities13  STRING,
+  Responsibilities14  STRING,
+  Responsibilities15  STRING,
+  IngestionDate       TIMESTAMP,
+  IsActive            BOOLEAN,
+  StartDate           TIMESTAMP,
+  EndDate             TIMESTAMP
+)
+USING DELTA OPTIONS (path '/mnt/adlslirkov/it-job-boards/Warehouse/DimResponsibilities')
+TBLPROPERTIES ('external.table.purge'='true')
+COMMENT 'The Responsibilities dimension'
+
+-- COMMAND ----------
+
+DROP TABLE WAREHOUSE.DimResponsibilities
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/Warehouse/DimResponsibilities", True)
+
+-- COMMAND ----------
+
+-- DELETE FROM WAREHOUSE.DimResponsibilities
+-- WHERE ResponsibilitiesId = 32
+
+-- UPDATE WAREHOUSE.DimResponsibilities
+-- SET Responsibilities0 = 'Test'
+-- WHERE ResponsibilitiesId = 31
+
+-- COMMAND ----------
+
+SELECT * FROM WAREHOUSE.DimResponsibilities
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## DimTools
+
+-- COMMAND ----------
+
+-- DBTITLE 1,DimTools Table Definition
+CREATE TABLE WAREHOUSE.DimTools  (
+  ToolsKey       BIGINT GENERATED ALWAYS AS IDENTITY,
+  ToolsId        BIGINT NOT NULL,
+  SourceSystem   STRING NOT NULL,
+  Tools0         STRING,
+  Tools1         STRING,
+  Tools2         STRING,
+  Tools3         STRING,
+  Tools4         STRING,
+  Tools5         STRING,
+  Tools6         STRING,
+  Tools7         STRING,
+  Tools8         STRING,
+  Tools9         STRING,
+  Tools10        STRING,
+  Tools11        STRING,
+  Tools12        STRING,
+  Tools13        STRING,
+  Tools14        STRING,
+  Tools15        STRING,
+  IngestionDate  TIMESTAMP,
+  IsActive       BOOLEAN,
+  StartDate      TIMESTAMP,
+  EndDate        TIMESTAMP
+)
+USING DELTA OPTIONS (path '/mnt/adlslirkov/it-job-boards/Warehouse/DimTools')
+TBLPROPERTIES ('external.table.purge'='true')
+COMMENT 'The Tools dimension'
+
+-- COMMAND ----------
+
+DROP TABLE WAREHOUSE.DimTools
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/Warehouse/DimTools", True)
+
+-- COMMAND ----------
+
+-- DELETE FROM WAREHOUSE.DimTools
+-- WHERE ToolsId = 32
+
+-- UPDATE WAREHOUSE.DimTools
+-- SET Tools0 = 'Test'
+-- WHERE ToolsId = 31
+
+-- COMMAND ----------
+
+SELECT * FROM WAREHOUSE.DimTools
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## DimValues
+
+-- COMMAND ----------
+
+-- DBTITLE 1,DimValues Table Definition
+CREATE TABLE WAREHOUSE.DimValues  (
+  ValuesKey      BIGINT GENERATED ALWAYS AS IDENTITY,
+  ValuesId       BIGINT NOT NULL,
+  SourceSystem   STRING NOT NULL,
+  ValuesTitle0   STRING,
+  ValuesText0    STRING,
+  ValuesTitle1   STRING,
+  ValuesText1    STRING,
+  ValuesTitle2   STRING,
+  ValuesText2    STRING,
+  ValuesTitle3   STRING,
+  ValuesText3    STRING,
+  ValuesTitle4   STRING,
+  ValuesText4    STRING,
+  ValuesTitle5   STRING,
+  ValuesText5    STRING,
+  ValuesTitle6   STRING,
+  ValuesText6    STRING,
+  ValuesTitle7   STRING,
+  ValuesText7    STRING,
+  IngestionDate  TIMESTAMP,
+  IsActive       BOOLEAN,
+  StartDate      TIMESTAMP,
+  EndDate        TIMESTAMP
+)
+USING DELTA OPTIONS (path '/mnt/adlslirkov/it-job-boards/Warehouse/DimValues')
+TBLPROPERTIES ('external.table.purge'='true')
+COMMENT 'The Values dimension'
+
+-- COMMAND ----------
+
+DROP TABLE WAREHOUSE.DimValues
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/Warehouse/DimValues", True)
+
+-- COMMAND ----------
+
+-- DELETE FROM WAREHOUSE.DimValues
+-- WHERE ValuesId = 4
+
+-- UPDATE WAREHOUSE.DimValues
+-- SET ValuesTitle0 = 'Test'
+-- WHERE ValuesId = 1
+
+-- COMMAND ----------
+
+SELECT * FROM WAREHOUSE.DimValues
+
+-- COMMAND ----------
+
 
