@@ -277,8 +277,8 @@ DROP TABLE WAREHOUSE.DimPerks
 
 -- COMMAND ----------
 
-DELETE FROM WAREHOUSE.DimPerks
-WHERE PerksId = 4
+-- DELETE FROM WAREHOUSE.DimPerks
+-- WHERE PerksId = 4
 
 -- UPDATE WAREHOUSE.DimPerks
 -- SET Perks0 = 'Play games'
@@ -287,6 +287,65 @@ WHERE PerksId = 4
 -- COMMAND ----------
 
 SELECT * FROM WAREHOUSE.DimPerks
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## DimRequirements
+
+-- COMMAND ----------
+
+-- DBTITLE 1,DimRequirements Table Definition
+CREATE TABLE WAREHOUSE.DimRequirements  (
+  RequirementsKey BIGINT GENERATED ALWAYS AS IDENTITY,
+  RequirementsId  BIGINT NOT NULL,
+  SourceSystem    STRING NOT NULL,
+  Requirements0   STRING,
+  Requirements1   STRING,
+  Requirements2   STRING,
+  Requirements3   STRING,
+  Requirements4   STRING,
+  Requirements5   STRING,
+  Requirements6   STRING,
+  Requirements7   STRING,
+  Requirements8   STRING,
+  Requirements9   STRING,
+  Requirements10  STRING,
+  Requirements11  STRING,
+  Requirements12  STRING,
+  Requirements13  STRING,
+  Requirements14  STRING,
+  Requirements15  STRING,
+  IngestionDate   TIMESTAMP,
+  IsActive        BOOLEAN,
+  StartDate       TIMESTAMP,
+  EndDate         TIMESTAMP
+)
+USING DELTA OPTIONS (path '/mnt/adlslirkov/it-job-boards/Warehouse/DimRequirements')
+TBLPROPERTIES ('external.table.purge'='true')
+COMMENT 'The Requirements dimension'
+
+-- COMMAND ----------
+
+DROP TABLE WAREHOUSE.DimRequirements
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/Warehouse/DimRequirements", True)
+
+-- COMMAND ----------
+
+-- DELETE FROM WAREHOUSE.DimRequirements
+-- WHERE RequirementsId = 32
+
+-- UPDATE WAREHOUSE.DimRequirements
+-- SET Requirements0 = 'Test'
+-- WHERE RequirementsId = 31
+
+-- COMMAND ----------
+
+SELECT * FROM WAREHOUSE.DimRequirements
 
 -- COMMAND ----------
 
