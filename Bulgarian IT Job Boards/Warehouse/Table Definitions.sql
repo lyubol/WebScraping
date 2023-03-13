@@ -526,4 +526,116 @@ SELECT * FROM WAREHOUSE.DimValues
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC ## DimCompany
 
+-- COMMAND ----------
+
+-- DBTITLE 1,DimCompany Table Definition
+CREATE TABLE WAREHOUSE.DimCompany  (
+  CompanyKey     BIGINT GENERATED ALWAYS AS IDENTITY,
+  CompanyId      BIGINT NOT NULL,
+  SourceSystem   STRING NOT NULL,
+  CompanyName    STRING,
+  Overview       STRING,
+  Product        STRING,
+  IsPublic       BOOLEAN,
+  CompanySlug    STRING,
+  IngestionDate  TIMESTAMP,
+  IsActive       BOOLEAN,
+  StartDate      TIMESTAMP,
+  EndDate        TIMESTAMP
+)
+USING DELTA OPTIONS (path '/mnt/adlslirkov/it-job-boards/Warehouse/DimCompany')
+TBLPROPERTIES ('external.table.purge'='true')
+COMMENT 'The Company dimension'
+
+-- COMMAND ----------
+
+DROP TABLE WAREHOUSE.DimCompany
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/Warehouse/DimCompany", True)
+
+-- COMMAND ----------
+
+-- DELETE FROM WAREHOUSE.DimCompany
+-- WHERE CompanyId = 4
+
+-- UPDATE WAREHOUSE.DimCompany
+-- SET CompanyName = 'TestChain'
+-- WHERE CompanyId = 9
+
+-- COMMAND ----------
+
+SELECT * FROM WAREHOUSE.DimCompany
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## DimLocations
+
+-- COMMAND ----------
+
+-- DBTITLE 1,DimLocations Table Definition
+CREATE TABLE WAREHOUSE.DimLocations  (
+  LocationKey       BIGINT GENERATED ALWAYS AS IDENTITY, 
+  LocationId        BIGINT NOT NULL,
+  CompanyId         BIGINT,
+  SourceSystem      STRING,
+  LocationComment0  STRING,
+  LocationFounded0  INT,
+  LocationTeamSize0 STRING,
+  LocationAddress0  STRING,
+  Latitude0         STRING,
+  Longitude0        STRING,
+  LocationComment1  STRING,
+  LocationFounded1  INT,
+  LocationTeamSize1 STRING,
+  LocationAddress1  STRING,
+  Latitude1         STRING,
+  Longitude1        STRING,
+  LocationComment2  STRING,
+  LocationFounded2  INT,
+  LocationTeamSize2 STRING,
+  LocationAddress2  STRING,
+  Latitude2         STRING,
+  Longitude2        STRING,
+  LocationComment3  STRING,
+  LocationFounded3  INT,
+  LocationTeamSize3 STRING,
+  LocationAddress3  STRING,
+  Latitude3         STRING,
+  Longitude3        STRING,
+  IngestionDate     TIMESTAMP,
+  IsActive          BOOLEAN,
+  StartDate         TIMESTAMP,
+  EndDate           TIMESTAMP
+)
+USING DELTA OPTIONS (path '/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations')
+TBLPROPERTIES ('external.table.purge'='true')
+COMMENT 'The Locations dimension'
+
+-- COMMAND ----------
+
+DROP TABLE WAREHOUSE.DimLocations
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations", True)
+
+-- COMMAND ----------
+
+-- DELETE FROM WAREHOUSE.DimLocations
+-- WHERE LocationId = 32
+
+-- UPDATE WAREHOUSE.DimLocations
+-- SET LocationFounded0 = 2023
+-- WHERE LocationId = 31
+
+-- COMMAND ----------
+
+SELECT * FROM WAREHOUSE.DimLocations
