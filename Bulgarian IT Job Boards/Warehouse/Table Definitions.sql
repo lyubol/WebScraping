@@ -639,3 +639,71 @@ DROP TABLE WAREHOUSE.DimLocations
 -- COMMAND ----------
 
 SELECT * FROM WAREHOUSE.DimLocations
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## DimJunk
+
+-- COMMAND ----------
+
+-- DBTITLE 1,DimJunk Table Definition
+CREATE TABLE WAREHOUSE.DimJunk (
+  JunkKey            BIGINT GENERATED ALWAYS AS IDENTITY, 
+  JunkId             BIGINT NOT NULL,
+  SourceSystem       STRING,
+  BusinessTraveling  BOOLEAN,
+  CustomerFacing     BOOLEAN,
+  Description        STRING,
+  FullyRemote        BOOLEAN,
+  HomeOfficeDays     INT,
+  HomeOfficePer      STRING,
+  JobType            STRING,
+  MainDatabase       STRING,
+  OfferingStock      BOOLEAN,
+  PrimaryLanguage    STRING,
+  ProductDescription STRING,
+  Role               STRING,
+  SalaryCurrency     STRING,
+  SalaryMax          INT,
+  SalaryMin          INT,
+  SalaryPeriod       STRING,
+  SecondaryLanguage  STRING,
+  SecondaryPlatform  STRING,
+  Seniority          STRING,
+  Slug               STRING,
+  TeamLeadName       STRING,
+  TeamLeadRole       STRING,
+  TeamSizeMax        INT,
+  TeamSizeMin        INT,
+  Title              STRING,
+  IngestionDate      TIMESTAMP,
+  IsActive           BOOLEAN,
+  StartDate          TIMESTAMP,
+  EndDate            TIMESTAMP
+)
+USING DELTA OPTIONS (path '/mnt/adlslirkov/it-job-boards/Warehouse/DimJunk')
+TBLPROPERTIES ('external.table.purge'='true')
+COMMENT 'The Junk dimension'
+
+-- COMMAND ----------
+
+DROP TABLE WAREHOUSE.DimJunk
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/Warehouse/DimJunk", True)
+
+-- COMMAND ----------
+
+-- DELETE FROM WAREHOUSE.DimJunk
+-- WHERE JunkId = 1794
+
+-- UPDATE WAREHOUSE.DimJunk
+-- SET BusinessTraveling = true
+-- WHERE JunkId = 1741
+
+-- COMMAND ----------
+
+SELECT * FROM WAREHOUSE.DimJunk
