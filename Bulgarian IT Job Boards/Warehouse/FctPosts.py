@@ -25,10 +25,6 @@ df_posts_noblehire = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-
 
 # COMMAND ----------
 
-df_posts_noblehire.display()
-
-# COMMAND ----------
-
 # DBTITLE 1,Read Dimensions
 df_dim_date = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimDate/")
 
@@ -55,6 +51,8 @@ df_dim_responsibilities = spark.read.format("delta").load("/mnt/adlslirkov/it-jo
 df_dim_tools = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimTools/")
 
 df_dim_values = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimValues/")
+
+df_dim_junk = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimJunk/")
 
 # COMMAND ----------
 
@@ -158,7 +156,7 @@ df_fct_posts = (
         col("id").alias("JobPostId"), 
         date_format(col("postedAt_Timestamp"), "yyyyMMdd").alias("DatePosted"), 
         lit(3).alias("SourceSystemKey"), 
-        col("id").alias("ActivityId"),
+        col("id").alias("ActivitiesId"),
         col("companyId").alias("AwardsId"),
         col("id").alias("BenefitsId"),
         col("companyId").alias("CompanyId"),
@@ -168,7 +166,8 @@ df_fct_posts = (
         col("id").alias("RequirementsId"),
         col("id").alias("ResponsibilitiesId"),
         col("id").alias("ToolsId"),
-        col("companyId").alias("ValuesId")
+        col("companyId").alias("ValuesId"),
+        col("id").alias("JunkId")
     )
 )
 
