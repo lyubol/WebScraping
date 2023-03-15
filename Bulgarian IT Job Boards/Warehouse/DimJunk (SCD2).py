@@ -85,56 +85,56 @@ df_posts_noblehire_enriched = (
 # COMMAND ----------
 
 # DBTITLE 1,Add SCD Type 2 Columns to Delta Table
-df_posts_noblehire_enriched = (
-    df_posts_noblehire_enriched
-    .withColumn("IsActive", lit(True))
-    .withColumn("StartDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
-    .withColumn("EndDate", lit(None).cast(StringType()))
-)
+# df_posts_noblehire_enriched = (
+#     df_posts_noblehire_enriched
+#     .withColumn("IsActive", lit(True))
+#     .withColumn("StartDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
+#     .withColumn("EndDate", lit(None).cast(StringType()))
+# )
 
 # COMMAND ----------
 
 # DBTITLE 1,Populate Delta Table, if empty
-df_posts_noblehire_enriched.createOrReplaceTempView("Temp_DimJunk")
+# df_posts_noblehire_enriched.createOrReplaceTempView("Temp_DimJunk")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC INSERT INTO WAREHOUSE.DimJunk (      
-# MAGIC   JunkId,           
-# MAGIC   SourceSystem,     
-# MAGIC   BusinessTraveling,
-# MAGIC   CustomerFacing,   
-# MAGIC   Description,      
-# MAGIC   FullyRemote,      
-# MAGIC   HomeOfficeDays,   
-# MAGIC   HomeOfficePer,    
-# MAGIC   JobType,          
-# MAGIC   MainDatabase,     
-# MAGIC   OfferingStock,    
-# MAGIC   PrimaryLanguage,  
-# MAGIC   ProductDescription,
-# MAGIC   Role,            
-# MAGIC   SalaryCurrency,   
-# MAGIC   SalaryMax,        
-# MAGIC   SalaryMin,        
-# MAGIC   SalaryPeriod,     
-# MAGIC   SecondaryLanguage,
-# MAGIC   SecondaryPlatform,
-# MAGIC   Seniority,        
-# MAGIC   Slug,             
-# MAGIC   TeamLeadName,     
-# MAGIC   TeamLeadRole,     
-# MAGIC   TeamSizeMax,      
-# MAGIC   TeamSizeMin,      
-# MAGIC   Title,
-# MAGIC   IngestionDate,      
-# MAGIC   IsActive,           
-# MAGIC   StartDate,          
-# MAGIC   EndDate            
-# MAGIC )
-# MAGIC SELECT * FROM Temp_DimJunk
+# %sql
+
+# INSERT INTO WAREHOUSE.DimJunk (      
+#   JunkId,           
+#   SourceSystem,     
+#   BusinessTraveling,
+#   CustomerFacing,   
+#   Description,      
+#   FullyRemote,      
+#   HomeOfficeDays,   
+#   HomeOfficePer,    
+#   JobType,          
+#   MainDatabase,     
+#   OfferingStock,    
+#   PrimaryLanguage,  
+#   ProductDescription,
+#   Role,            
+#   SalaryCurrency,   
+#   SalaryMax,        
+#   SalaryMin,        
+#   SalaryPeriod,     
+#   SecondaryLanguage,
+#   SecondaryPlatform,
+#   Seniority,        
+#   Slug,             
+#   TeamLeadName,     
+#   TeamLeadRole,     
+#   TeamSizeMax,      
+#   TeamSizeMin,      
+#   Title,
+#   IngestionDate,      
+#   IsActive,           
+#   StartDate,          
+#   EndDate            
+# )
+# SELECT * FROM Temp_DimJunk
 
 # COMMAND ----------
 
@@ -205,10 +205,6 @@ joinDF = (
 )
 
 joinDF.display()
-
-# COMMAND ----------
-
-filterDF.select(xxhash64("JunkId").alias("Source"), xxhash64("target_JunkId").alias("Target")).where(col("JunkId") == 4).display()
 
 # COMMAND ----------
 
