@@ -707,3 +707,46 @@ DROP TABLE WAREHOUSE.DimJunk
 -- COMMAND ----------
 
 SELECT * FROM WAREHOUSE.DimJunk
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## FctPosts
+
+-- COMMAND ----------
+
+-- DBTITLE 1,FctPosts Table Definition
+CREATE TABLE WAREHOUSE.FctPosts  (
+  JobPostKey         BIGINT GENERATED ALWAYS AS IDENTITY,
+  JobPostId          BIGINT NOT NULL,
+  DatePosted         INT NOT NULL,
+  SourceSystem       INT NOT NULL,
+  ActivitiesId       INT,
+  AwardsId           INT,
+  BenefitsId         INT,
+  CompanyId          INT,
+  HiringProcessId    INT,
+  LocationId         INT,
+  PerksId            INT,
+  RequirementsId     INT,
+  ResponsibilitiesId INT,
+  ToolsId            INT,
+  ValuesId           INT,
+  JunkId             INT
+)
+USING DELTA OPTIONS (path '/mnt/adlslirkov/it-job-boards/Warehouse/FctPosts')
+TBLPROPERTIES ('external.table.purge'='true')
+COMMENT 'The Posts fact'
+
+-- COMMAND ----------
+
+DROP TABLE WAREHOUSE.FctPosts
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.rm("/mnt/adlslirkov/it-job-boards/Warehouse/FctPosts", True)
+
+-- COMMAND ----------
+
+SELECT * FROM WAREHOUSE.FctPosts

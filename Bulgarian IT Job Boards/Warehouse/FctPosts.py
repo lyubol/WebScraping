@@ -154,20 +154,20 @@ df_fct_posts = (
     df_posts_noblehire
     .select(
         col("id").alias("JobPostId"), 
-        date_format(col("postedAt_Timestamp"), "yyyyMMdd").alias("DatePosted"), 
-        lit(3).alias("SourceSystemKey"), 
-        col("id").alias("ActivitiesId"),
-        col("companyId").alias("AwardsId"),
-        col("id").alias("BenefitsId"),
-        col("companyId").alias("CompanyId"),
-        col("id").alias("HiringProcessId"),
-        col("id").alias("LocationId"),
-        col("companyId").alias("PerksId"),
-        col("id").alias("RequirementsId"),
-        col("id").alias("ResponsibilitiesId"),
-        col("id").alias("ToolsId"),
-        col("companyId").alias("ValuesId"),
-        col("id").alias("JunkId")
+        date_format(col("postedAt_Timestamp"), "yyyyMMdd").alias("DatePosted").cast("int"), 
+        lit(3).alias("SourceSystemKey").cast("int"), 
+        col("id").alias("ActivitiesId").cast("int"),
+        col("companyId").alias("AwardsId").cast("int"),
+        col("id").alias("BenefitsId").cast("int"),
+        col("companyId").alias("CompanyId").cast("int"),
+        col("id").alias("HiringProcessId").cast("int"),
+        col("id").alias("LocationId").cast("int"),
+        col("companyId").alias("PerksId").cast("int"),
+        col("id").alias("RequirementsId").cast("int"),
+        col("id").alias("ResponsibilitiesId").cast("int"),
+        col("id").alias("ToolsId").cast("int"),
+        col("companyId").alias("ValuesId").cast("int"),
+        col("id").alias("JunkId").cast("int")
     )
 )
 
@@ -180,5 +180,27 @@ df_fct_posts.display()
 
 # COMMAND ----------
 
-# DBTITLE 1,Create FctPosts
-df_fct_posts.write.format("delta").mode("overwrite").option("path", "/mnt/adlslirkov/it-job-boards/Warehouse/FctPosts").saveAsTable("WAREHOUSE.FctPosts")
+df_fct_posts.createOrReplaceTempView("Temp_FctPosts")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC 
+# MAGIC INSERT INTO WAREHOUSE.FctPosts (      
+# MAGIC   JobPostId,
+# MAGIC   DatePosted,
+# MAGIC   SourceSystem,
+# MAGIC   ActivitiesId,
+# MAGIC   AwardsId,
+# MAGIC   BenefitsId,
+# MAGIC   CompanyId,
+# MAGIC   HiringProcessId,
+# MAGIC   LocationId,
+# MAGIC   PerksId,
+# MAGIC   RequirementsId,
+# MAGIC   ResponsibilitiesId,
+# MAGIC   ToolsId,
+# MAGIC   ValuesId,
+# MAGIC   JunkId
+# MAGIC )
+# MAGIC SELECT * FROM Temp_FctPosts
