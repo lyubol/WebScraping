@@ -39,7 +39,7 @@ df_awards_noblehire_base = spark.read.format("parquet").load(f"/mnt/adlslirkov/i
 
 # Rename columns
 df_awards_noblehire_enriched = (
-    df_awards_noblehire_enriched
+    df_awards_noblehire_base
     .toDF("AwardsId", *[c.replace("company_", "").replace("_title", "").replace("_", "").title() for c in df_awards_noblehire_base.columns if c.startswith("company_")], "SourceSystem", "IngestionDate")
 )
 
@@ -59,24 +59,24 @@ df_awards_noblehire_enriched = df_awards_noblehire_enriched.select("AwardsId", "
 # COMMAND ----------
 
 # DBTITLE 1,Add SCD Type 2 Columns to Delta Table
-df_awards_noblehire_enriched = (
-    df_awards_noblehire_enriched
-    .withColumn("IsActive", lit(True))
-    .withColumn("StartDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
-    .withColumn("EndDate", lit(None).cast(StringType()))
-)
+# df_awards_noblehire_enriched = (
+#     df_awards_noblehire_enriched
+#     .withColumn("IsActive", lit(True))
+#     .withColumn("StartDate", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
+#     .withColumn("EndDate", lit(None).cast(StringType()))
+# )
 
 # COMMAND ----------
 
 # DBTITLE 1,Populate Delta Table, if empty
-df_awards_noblehire_enriched.createOrReplaceTempView("Temp_DimAwards")
+# df_awards_noblehire_enriched.createOrReplaceTempView("Temp_DimAwards")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC INSERT INTO WAREHOUSE.DimAwards (AwardsId, SourceSystem, Awards0, Awards1, Awards2, Awards3, Awards4, Awards5, Awards6, Awards7, Awards8, IngestionDate, IsActive, StartDate, EndDate)
-# MAGIC SELECT * FROM Temp_DimAwards
+# %sql
+
+# INSERT INTO WAREHOUSE.DimAwards (AwardsId, SourceSystem, Awards0, Awards1, Awards2, Awards3, Awards4, Awards5, Awards6, Awards7, Awards8, IngestionDate, IsActive, StartDate, EndDate)
+# SELECT * FROM Temp_DimAwards
 
 # COMMAND ----------
 
