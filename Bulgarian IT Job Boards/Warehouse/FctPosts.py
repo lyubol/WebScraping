@@ -26,33 +26,33 @@ df_posts_noblehire = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-
 # COMMAND ----------
 
 # DBTITLE 1,Read Dimensions
-df_dim_date = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimDate/")
+# df_dim_date = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimDate/")
 
-df_dim_source_systems = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimSourceSystems/")
+# df_dim_source_systems = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimSourceSystems/")
 
-df_dim_activities = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimActivities/")
+# df_dim_activities = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimActivities/")
 
-df_dim_awards = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimAwards/")
+# df_dim_awards = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimAwards/")
 
-df_dim_benefits = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimBenefits/")
+# df_dim_benefits = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimBenefits/")
 
-df_dim_company = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimCompany/")
+# df_dim_company = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimCompany/")
 
-df_dim_hiring_process = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimHiringProcess/")
+# df_dim_hiring_process = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimHiringProcess/")
 
-df_dim_locations = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations/")
+# df_dim_locations = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimLocations/")
 
-df_dim_perks = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimPerks/")
+# df_dim_perks = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimPerks/")
 
-df_dim_requirements = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimRequirements/")
+# df_dim_requirements = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimRequirements/")
 
-df_dim_responsibilities = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimResponsibilities/")
+# df_dim_responsibilities = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimResponsibilities/")
 
-df_dim_tools = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimTools/")
+# df_dim_tools = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimTools/")
 
-df_dim_values = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimValues/")
+# df_dim_values = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimValues/")
 
-df_dim_junk = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimJunk/")
+# df_dim_junk = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimJunk/")
 
 # COMMAND ----------
 
@@ -155,7 +155,7 @@ df_fct_posts = (
     .select(
         col("id").alias("JobPostId"), 
         date_format(col("postedAt_Timestamp"), "yyyyMMdd").alias("DatePosted").cast("int"), 
-        lit(3).alias("SourceSystemKey").cast("int"), 
+        lit(3).alias("SourceSystemId").cast("int"), 
         col("id").alias("ActivitiesId").cast("int"),
         col("companyId").alias("AwardsId").cast("int"),
         col("id").alias("BenefitsId").cast("int"),
@@ -180,7 +180,47 @@ df_fct_posts.display()
 
 # COMMAND ----------
 
-df_fct_posts.createOrReplaceTempView("Temp_FctPosts")
+df_fct_posts.createOrReplaceTempView("Temp_FctPostsCurrent")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC 
+# MAGIC CREATE OR REPLACE TEMP VIEW Temp_FctPostsUpdates
+# MAGIC AS 
+# MAGIC   SELECT JobPostId,
+# MAGIC          DatePosted,
+# MAGIC          SourceSystemId,
+# MAGIC          ActivitiesId,
+# MAGIC          AwardsId,
+# MAGIC          BenefitsId,
+# MAGIC          CompanyId,
+# MAGIC          HiringProcessId,
+# MAGIC          LocationId,
+# MAGIC          PerksId,
+# MAGIC          RequirementsId,
+# MAGIC          ResponsibilitiesId,
+# MAGIC          ToolsId,
+# MAGIC          ValuesId,
+# MAGIC          JunkId
+# MAGIC   FROM   Temp_FctPostsCurrent
+# MAGIC   EXCEPT 
+# MAGIC   SELECT JobPostId,
+# MAGIC          DatePosted,
+# MAGIC          SourceSystemId,
+# MAGIC          ActivitiesId,
+# MAGIC          AwardsId,
+# MAGIC          BenefitsId,
+# MAGIC          CompanyId,
+# MAGIC          HiringProcessId,
+# MAGIC          LocationId,
+# MAGIC          PerksId,
+# MAGIC          RequirementsId,
+# MAGIC          ResponsibilitiesId,
+# MAGIC          ToolsId,
+# MAGIC          ValuesId,
+# MAGIC          JunkId
+# MAGIC   FROM   WAREHOUSE.FctPosts
 
 # COMMAND ----------
 
@@ -189,7 +229,7 @@ df_fct_posts.createOrReplaceTempView("Temp_FctPosts")
 # MAGIC INSERT INTO WAREHOUSE.FctPosts (      
 # MAGIC   JobPostId,
 # MAGIC   DatePosted,
-# MAGIC   SourceSystem,
+# MAGIC   SourceSystemId,
 # MAGIC   ActivitiesId,
 # MAGIC   AwardsId,
 # MAGIC   BenefitsId,
@@ -203,4 +243,4 @@ df_fct_posts.createOrReplaceTempView("Temp_FctPosts")
 # MAGIC   ValuesId,
 # MAGIC   JunkId
 # MAGIC )
-# MAGIC SELECT * FROM Temp_FctPosts
+# MAGIC SELECT * FROM Temp_FctPostsUpdates
