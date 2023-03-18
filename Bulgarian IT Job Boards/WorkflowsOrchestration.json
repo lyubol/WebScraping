@@ -1,0 +1,277 @@
+{
+    "job_id": 579085206464250,
+    "creator_user_name": "l_l@adatis.co.uk",
+    "run_as_user_name": "l_l@adatis.co.uk",
+    "run_as_owner": true,
+    "settings": {
+        "name": "Ingest_Noblehire",
+        "email_notifications": {
+            "no_alert_for_skipped_runs": false
+        },
+        "webhook_notifications": {},
+        "timeout_seconds": 0,
+        "schedule": {
+            "quartz_cron_expression": "16 0 5 * * ?",
+            "timezone_id": "Europe/Kiev",
+            "pause_status": "UNPAUSED"
+        },
+        "max_concurrent_runs": 1,
+        "tasks": [
+            {
+                "task_key": "S2R_Noblehire",
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Source to Raw Notebooks/Source to Raw (Noblehire.io)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "R2B_Noblehire",
+                "depends_on": [
+                    {
+                        "task_key": "S2R_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Raw to Base Notebooks/Raw to Base (Noblehire.io)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimAwards",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimAwards (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimActivities",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimActivities (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimBenefits",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimBenefits (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimHiringProcess",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimHiringProcess (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimPerks",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimPerks (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimRequirements",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimRequirements (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimResponsibilities",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimResponsibilities (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimTools",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimTools (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimValues",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimValues (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimCompany",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimCompany (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimLocations",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimLocations (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "DimJunk",
+                "depends_on": [
+                    {
+                        "task_key": "R2B_Noblehire"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/DimJunk (SCD2)",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "FctPosts",
+                "depends_on": [
+                    {
+                        "task_key": "DimHiringProcess"
+                    },
+                    {
+                        "task_key": "DimActivities"
+                    },
+                    {
+                        "task_key": "DimAwards"
+                    },
+                    {
+                        "task_key": "DimBenefits"
+                    },
+                    {
+                        "task_key": "DimTools"
+                    },
+                    {
+                        "task_key": "DimJunk"
+                    },
+                    {
+                        "task_key": "DimRequirements"
+                    },
+                    {
+                        "task_key": "DimPerks"
+                    },
+                    {
+                        "task_key": "DimCompany"
+                    },
+                    {
+                        "task_key": "DimLocations"
+                    },
+                    {
+                        "task_key": "DimResponsibilities"
+                    },
+                    {
+                        "task_key": "DimValues"
+                    }
+                ],
+                "notebook_task": {
+                    "notebook_path": "/lirkov/IT Job Boards/Warehouse/FctPosts",
+                    "source": "WORKSPACE"
+                },
+                "existing_cluster_id": "0722-153355-31sammwe",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            }
+        ],
+        "format": "MULTI_TASK"
+    },
+    "created_time": 1671204366910
+}
