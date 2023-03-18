@@ -1,8 +1,11 @@
 # Bulgarian IT Job Boards
 
 Project Developer: Lyubomir Lirkov
+
 Last Updated Date: 2023/03/18
+
 Infrastructure Components: Azure Databricks, Azure Data Lake Storage
+
 Languages Used: Python (PySpark), SQL
 
 ## 1. Overview
