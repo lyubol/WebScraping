@@ -26,7 +26,7 @@ df_posts_noblehire = spark.read.format("parquet").load(f"/mnt/adlslirkov/it-job-
 # COMMAND ----------
 
 # DBTITLE 1,Read Dimensions
-# df_dim_date = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimDate/")
+df_dim_date = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimDate/")
 
 # df_dim_source_systems = spark.read.format("delta").load("/mnt/adlslirkov/it-job-boards/Warehouse/DimSourceSystems/")
 
